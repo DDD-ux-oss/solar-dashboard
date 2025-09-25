@@ -1,0 +1,12 @@
+{
+  "name": "login-dashboard",
+  "version": "1.0.0",
+  "description": "登录后显示表格的网页应用",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -p 3000"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}
