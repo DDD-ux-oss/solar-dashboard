@@ -85,5 +85,11 @@
     "total_dc_capacity": 16.16276,
     "total_ac_capacity": 13.45858,
     "total_daily_generation": 38200.909999999996
+  },
+  "6": {
+    "name": "零碳商业园",
+    "dcCapacity": 1.58858,
+    "acCapacity": 1.58858,
+    "dailyGeneration": 1539.0
   }
 }

@@ -1597,6 +1597,9 @@ class ESolarScraper:
             pass
         station_item.click()
         time.sleep(1)
+        # 等待页面加载五秒
+        logger.info('点击项目项后，等待页面加载五秒')
+        time.sleep(5)
         # 3) 点击tab-switch下的“月”标签
         tab_switch = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "tab-switch")))
         # 强化“月”标签的定位与点击策略
@@ -1657,6 +1660,9 @@ class ESolarScraper:
             except Exception:
                 pass
         time.sleep(1)
+        # 点击月标签后等待五秒
+        logger.info('点击月标签后，等待五秒')
+        time.sleep(5)
         # 进入包含图表的iframe（若存在），先回到主文档再递归查找
         try:
             try:
