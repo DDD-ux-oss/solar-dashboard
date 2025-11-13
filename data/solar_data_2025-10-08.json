@@ -1,0 +1,99 @@
+{
+  "date": "2025-10-08",
+  "generation_data": {
+    "timestamp": "2025-10-09 09:17:15",
+    "data": [
+      {
+        "id": 1,
+        "name": "宋滩",
+        "dcCapacity": 5.9826,
+        "acCapacity": 4.77,
+        "dailyGeneration": 2268.05,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-green-500",
+        "power_curve": {
+          "data_points": []
+        }
+      },
+      {
+        "id": 2,
+        "name": "李赞皇",
+        "dcCapacity": 1.94346,
+        "acCapacity": 1.7,
+        "dailyGeneration": 640.96,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-yellow-400",
+        "power_curve": {
+          "data_points": []
+        }
+      },
+      {
+        "id": 3,
+        "name": "滨北南邱",
+        "dcCapacity": 5.3749,
+        "acCapacity": 4.3,
+        "dailyGeneration": 1791.07,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-green-500",
+        "power_curve": {
+          "data_points": []
+        }
+      },
+      {
+        "id": 4,
+        "name": "水立方",
+        "dcCapacity": 1.16938,
+        "acCapacity": 1,
+        "dailyGeneration": 397.2,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-green-500",
+        "power_curve": {
+          "data_points": []
+        }
+      },
+      {
+        "id": 5,
+        "name": "黄河植物园",
+        "dcCapacity": 0.10384,
+        "acCapacity": 0.1,
+        "dailyGeneration": 32.43,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-green-500",
+        "power_curve": {
+          "data_points": []
+        }
+      },
+      {
+        "id": 6,
+        "name": "零碳商业园",
+        "dcCapacity": 1.65008,
+        "acCapacity": 1.58858,
+        "dailyGeneration": 310.50,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-green-500",
+        "power_curve": {
+          "data_points": []
+        }
+      }
+    ],
+    "total_projects": 6,
+    "summary": {
+      "total_dc_capacity": 16.22426,
+      "total_ac_capacity": 13.45858,
+      "total_daily_generation": 5897.28
+    }
+  },
+  "weather_data": {
+    "date": "2025-10-08",
+    "temperature": 25.5,
+    "humidity": 65,
+    "weather_type": "sunny",
+    "weather_description": "晴朗"
+  }
+}

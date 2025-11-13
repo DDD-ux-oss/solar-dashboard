@@ -1,0 +1,97 @@
+name: 太阳能数据爬虫与更新
+
+# 定义工作流触发条件
+on:
+  # 定期执行 - 每天上午8点执行（UTC时间，北京时间为下午4点）
+  # 如需修改执行时间，请调整cron表达式
+  # cron格式: 分钟 小时 日期 月份 星期几
+  # 例如: '0 0 * * *' 表示UTC时间每天午夜（北京时间早上8点）
+  # 例如: '0 12 * * *' 表示UTC时间每天中午（北京时间晚上8点）
+  schedule:
+    - cron: '0 0 * * *'
+  # 允许手动触发
+  workflow_dispatch:
+
+# 定义工作流任务
+jobs:
+  scrape-and-update:
+    # 在最新的Ubuntu环境中运行
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 步骤1: 检出代码仓库
+      - name: 检出代码
+        uses: actions/checkout@v3
+        
+      # 步骤2: 设置Python环境
+      - name: 设置Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+          
+      # 步骤3: 安装系统依赖（Chrome浏览器和驱动）
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget curl unzip
+          # 安装Chrome浏览器
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          
+      # 步骤4: 安装Python依赖
+      - name: 安装Python依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium python-dateutil Pillow
+          
+      # 步骤5: 运行爬虫脚本
+      - name: 运行太阳能数据爬虫
+        env:
+          # 从GitHub Secrets中获取敏感信息
+          HUAWEI_USERNAME: ${{ secrets.HUAWEI_USERNAME }}
+          HUAWEI_PASSWORD: ${{ secrets.HUAWEI_PASSWORD }}
+          SEMS_USERNAME: ${{ secrets.SEMS_USERNAME }}
+          SEMS_PASSWORD: ${{ secrets.SEMS_PASSWORD }}
+          ESOLAR_USERNAME: ${{ secrets.ESOLAR_USERNAME }}
+          ESOLAR_PASSWORD: ${{ secrets.ESOLAR_PASSWORD }}
+        run: |
+          # 设置显示环境，用于Chrome运行
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          
+          # 运行爬虫脚本
+          python update_solar_dashboard.py
+          
+      # 步骤6: 检查数据是否更新
+      - name: 检查数据更新
+        run: |
+          # 检查solar_data.json文件是否存在且不为空
+          if [ -s solar_data.json ]; then
+            echo "数据文件存在且不为空"
+            cat solar_data.json
+          else
+            echo "数据文件不存在或为空，退出工作流"
+            exit 1
+          fi
+          
+      # 步骤7: 提交更新的数据文件到仓库
+      - name: 提交数据更新
+        run: |
+          # 配置Git用户信息
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # 检查是否有更改
+          git add solar_data.json screenshots/
+          git status
+          
+          # 如果有更改，提交并推送
+          if ! git diff --staged --quiet; then
+            git commit -m "自动化更新太阳能数据 $(date +'%Y-%m-%d %H:%M:%S')"
+            git push origin main
+            echo "数据已成功更新并推送到仓库"
+          else
+            echo "没有检测到数据更改，跳过提交"
+          fi

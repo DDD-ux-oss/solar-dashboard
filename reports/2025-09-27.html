@@ -1,0 +1,1066 @@
+http://localhost:8000<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 截图加载辅助工具 -->
+    <script src="screenshot_loader.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF', // 深蓝色作为主色调，代表专业和信任感
+            secondary: '#00B42A', // 绿色作为次要色调，代表环保和能源
+            accent: '#722ED1', // 紫色作为强调色
+            dark: '#1D2129', // 深色背景
+            light: '#F2F3F5', // 浅色背景
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'card-hover': '0 10px 30px rgba(0, 0, 0, 0.12)',
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .form-input-focus {
+        @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none transition-all duration-300;
+      }
+      .btn-primary {
+        @apply bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:outline-none transform hover:-translate-y-0.5;
+      }
+      .btn-secondary {
+        @apply bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-sm hover:shadow focus:ring-2 focus:ring-gray-400/50 focus:ring-offset-2 focus:outline-none;
+      }
+      .card {
+        @apply bg-white rounded-xl shadow-card overflow-hidden transition-all duration-300 hover:shadow-card-hover transform hover:-translate-y-1;
+      }
+      .table-row-hover {
+        @apply hover:bg-gray-50 transition-colors duration-150;
+      }
+      .glass-effect {
+        @apply bg-white/80 backdrop-blur-md;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+      .animate-slide-up {
+        animation: slideUp 0.5s ease-out;
+      }
+      .animate-pulse-light {
+        animation: pulseLight 2s infinite;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulseLight {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-light min-h-screen antialiased">
+    <!-- 数据更新通知区域 -->
+    <div id="data-update-notification" class="fixed bottom-4 right-4 bg-secondary text-white px-4 py-3 rounded-lg shadow-lg flex items-center transform translate-y-20 opacity-0 transition-all duration-500 z-50 animate-fade-in">
+        <i class="fa fa-refresh mr-2 animate-spin"></i>
+        <span>数据已更新</span>
+    </div>
+  <!-- 登录页面 -->
+  <div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-accent/5">
+    <div class="card w-full max-w-md p-8 animate-slide-up">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform duration-500 hover:scale-110">
+          <i class="fa fa-line-chart text-primary text-2xl"></i>
+        </div>
+        <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark">新鼎能源项目管理系统</h1>
+        <p class="text-gray-500 mt-2">请输入您的用户名和密码进行登录</p>
+      </div>
+      
+      <form id="login-form" class="space-y-4">
+        <div class="space-y-2">
+          <label for="username" class="block text-sm font-medium text-gray-700">用户名</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fa fa-user text-gray-400"></i>
+            </div>
+            <input type="text" id="username" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg form-input-focus transition-all" placeholder="请输入用户名" required>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fa fa-lock text-gray-400"></i>
+            </div>
+            <input type="password" id="password" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg form-input-focus transition-all" placeholder="请输入密码" required>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <input id="remember-me" type="checkbox" class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary">
+            <label for="remember-me" class="ml-2 block text-sm text-gray-700">记住我</label>
+          </div>
+          <div class="text-sm">
+            <a href="#" class="font-medium text-primary hover:text-primary/80 transition-colors">忘记密码？</a>
+          </div>
+        </div>
+        
+        <button type="submit" class="w-full btn-primary">
+          <i class="fa fa-sign-in mr-2"></i>登录
+        </button>
+      </form>
+      
+      <div class="mt-6 text-center text-sm text-gray-500">
+        还没有账号？ <a href="#" class="font-medium text-primary hover:text-primary/80 transition-colors">立即注册</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 仪表盘页面 (默认隐藏) -->
+    <div id="dashboard-page" class="hidden min-h-screen">
+      <!-- 最后更新时间显示 -->
+      <div class="absolute top-4 right-4 text-sm text-gray-500">
+        最后更新时间: <span id="last-update-time">--</span>
+      </div>
+    <!-- 顶部导航栏 -->
+    <header class="glass-effect shadow-md fixed top-0 left-0 right-0 z-10 transition-all duration-300">
+      <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <i class="fa fa-line-chart text-primary text-2xl"></i>
+          <h1 class="text-xl font-bold text-dark">新鼎能源项目日报</h1>
+        </div>
+        
+        <div class="flex items-center space-x-6">
+          <div class="text-sm text-gray-600 flex items-center">
+            <i class="fa fa-clock-o mr-2 text-primary"></i>
+            <span id="last-update-time">--</span>
+          </div>
+          <button id="logout-btn" class="btn-secondary">
+            <i class="fa fa-sign-out mr-2"></i>退出登录
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- 主内容区域 -->
+    <main class="container mx-auto px-4 pt-28 pb-12">
+      <div class="card p-6 mb-6 animate-fade-in">
+        <!-- 报表标题和日期信息 -->
+        <div class="mb-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h2 class="text-2xl font-bold text-dark flex items-center">
+              <i class="fa fa-bar-chart mr-3 text-primary"></i>
+              项目发电数据报表
+            </h2>
+            <div class="flex flex-wrap gap-4">
+              <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
+                <div class="flex items-center text-gray-600 text-sm mb-1">
+                  <i class="fa fa-calendar-o mr-2 text-primary"></i>
+                  <span>报表日期：</span>
+                </div>
+                <div class="font-medium text-dark" id="report-date">2025年09月27日</div>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
+                <div class="flex items-center text-gray-600 text-sm mb-1">
+                  <i class="fa fa-cloud mr-2 text-primary"></i>
+                  <span>天气状况：</span>
+                </div>
+                <div class="font-medium text-dark" id="weather-info">加载中...</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 日期导航区域 -->
+          <div class="date-navigation bg-white p-5 rounded-lg shadow mb-6 border-l-4 border-primary transition-all duration-300 hover:shadow-md">
+            <h3 class="font-medium text-dark mb-3 flex items-center">
+              <i class="fa fa-history mr-2 text-primary"></i>
+              历史数据
+            </h3>
+            <div class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+        
+        <!-- 数据表格 -->
+        <div class="overflow-x-auto bg-white rounded-xl shadow-sm">
+          <table class="min-w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-50 text-left">
+                <th class="px-6 py-4 border-b border-gray-200 text-sm font-semibold text-gray-700 tracking-wider" width="15%">项目名称</th>
+                <th class="px-6 py-4 border-b border-gray-200 text-right text-sm font-semibold text-gray-700 tracking-wider" width="10%">直流测容量(MWp)</th>
+                <th class="px-6 py-4 border-b border-gray-200 text-right text-sm font-semibold text-gray-700 tracking-wider" width="10%">交流测容量(MW)</th>
+                <th class="px-6 py-4 border-b border-gray-200 text-right text-sm font-semibold text-gray-700 tracking-wider" width="12%">本日发电量(kWh)</th>
+                <th class="py-4 border-b border-gray-200 text-center text-sm font-semibold text-gray-700 tracking-wider" width="33%">今日发电曲线</th>
+                <th class="px-6 py-4 border-b border-gray-200 text-center text-sm font-semibold text-gray-700 tracking-wider" width="10%">等效利用小时</th>
+                <th class="px-6 py-4 border-b border-gray-200 text-center text-sm font-semibold text-gray-700 tracking-wider" width="10%">平均利用小时</th>
+              </tr>
+            </thead>
+            <tbody id="data-table-body" class="bg-white divide-y divide-gray-200">
+              <!-- 表格数据将通过JavaScript动态生成 -->
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 日报说明 -->
+        <div class="mt-6 bg-blue-50 p-5 rounded-lg border border-blue-100 shadow-sm">
+          <div class="flex items-start">
+            <i class="fa fa-info-circle text-primary text-xl mt-0.5 mr-3"></i>
+            <div>
+              <h3 class="font-medium text-dark mb-2">日报说明</h3>
+              <p class="text-sm text-gray-700 leading-relaxed" id="report-summary">
+                本日天气晴转雾后，各光伏项目发电效能显著回升，等效利用小时均值达5.83h。滨北南邱家以6.29h领跑，梁才宋滩(6.21h)同步恢复高效运行，零碳商业园仍严重滞后。
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 调试信息区域 -->
+        <div class="mt-6 bg-gray-900 p-5 rounded-lg border border-gray-700">
+          <h3 class="text-sm font-medium text-green-400 mb-3 flex items-center">
+            <i class="fa fa-code mr-2"></i>
+            调试信息
+          </h3>
+          <div id="debug-info" class="text-xs text-gray-300 font-mono max-h-40 overflow-y-auto whitespace-pre-wrap">
+            <!-- 调试信息将通过JavaScript动态添加 -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- JavaScript -->
+  <script>
+    // 调试日志函数 - 将日志同时输出到控制台和页面调试区域
+    function debugLog(message) {
+      // 输出到控制台
+      console.log(message);
+      
+      // 输出到页面调试区域
+      const debugInfo = document.getElementById('debug-info');
+      if (debugInfo) {
+        const timestamp = new Date().toLocaleTimeString();
+        debugInfo.innerHTML += `[${timestamp}] ${message}\n`;
+        // 自动滚动到底部
+        debugInfo.scrollTop = debugInfo.scrollHeight;
+      }
+    }
+    
+    // 项目容量基础数据（这些数据相对稳定，从原始数据中保留）
+    const baseProjectData = [
+      { id: 1, name: '梁才宋滩', dcCapacity: 5.9826, acCapacity: 4.77 },
+      { id: 2, name: '杨柳雪李赞皇', dcCapacity: 1.94346, acCapacity: 1.7 },
+      { id: 3, name: '滨北南邱家', dcCapacity: 5.3749, acCapacity: 4.3 },
+      { id: 4, name: '水立方', dcCapacity: 1.16938, acCapacity: 1 },
+      { id: 5, name: '黄河植物园', dcCapacity: 0.10384, acCapacity: 0.1 },
+      { id: 6, name: '零碳商业园', dcCapacity: 1.65008, acCapacity: 1.58858 }
+    ];
+    
+    // 从爬虫数据文件加载的实时数据
+    let energyProjectData = [];
+    let filteredData = [];
+    
+    // 生成日期信息 - 显示前一天的日期
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('report-date').textContent = yesterday.toLocaleDateString('zh-CN', options);
+    
+    // 查询并显示前一天的天气信息
+    async function fetchWeatherData() {
+      try {
+        // 使用用户提供的Open-Meteo forecast API URL
+        // 此API包含过去1天的数据(past_days=1)和未来几天的预报
+        const apiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=37.43&longitude=118.01&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&past_days=1&forecast_days=1&models=cma_grapes_global';
+        
+        debugLog('天气数据请求URL: ' + apiUrl);
+        const response = await fetch(apiUrl);
+        
+        if (response.ok) {
+            debugLog('天气API响应状态: ' + response.status);
+            const data = await response.json();
+            debugLog('天气API完整响应数据: ' + JSON.stringify(data));
+          
+          // 检查数据结构是否完整
+          if (data && data.daily && 
+              Array.isArray(data.daily.temperature_2m_max) && 
+              Array.isArray(data.daily.temperature_2m_min) && 
+              Array.isArray(data.daily.weather_code) && 
+              data.daily.time && Array.isArray(data.daily.time)) {
+              
+            // 计算前一天的日期字符串，用于在返回的数据中查找对应日期
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const year = yesterday.getFullYear();
+            const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+            const day = String(yesterday.getDate()).padStart(2, '0');
+            const yesterdayDateStr = `${year}-${month}-${day}`;
+            
+            // 查找前一天的数据索引 (past_days=1，所以通常是索引0)
+            let dataIndex = 0;
+            if (data.daily.time.length > 0) {
+              debugLog('可用天气数据日期: ' + data.daily.time.join(', '));
+              // 尝试精确匹配前一天的日期
+              const exactIndex = data.daily.time.findIndex(date => date === yesterdayDateStr);
+              debugLog('日期匹配结果 - 查找日期: ' + yesterdayDateStr + ', 找到索引: ' + exactIndex);
+              // 如果找不到精确匹配，使用第一个数据点
+              dataIndex = exactIndex !== -1 ? exactIndex : 0;
+              debugLog('最终使用数据索引: ' + dataIndex + ', 对应日期: ' + data.daily.time[dataIndex]);
+            }
+            
+            // 使用默认值避免显示0-0°C
+            const tempMaxOrig = data.daily.temperature_2m_max[dataIndex];
+            const tempMinOrig = data.daily.temperature_2m_min[dataIndex];
+            const weatherCodeOrig = data.daily.weather_code[dataIndex];
+            debugLog('原始天气数据 - 最高温: ' + tempMaxOrig + '°C, 最低温: ' + tempMinOrig + '°C, 天气代码: ' + weatherCodeOrig);
+            
+            const tempMax = tempMaxOrig !== undefined ? Math.round(tempMaxOrig) : 25;
+            const tempMin = tempMinOrig !== undefined ? Math.round(tempMinOrig) : 18;
+            const weatherCode = weatherCodeOrig !== undefined ? weatherCodeOrig : 0; // 默认晴
+            
+            // 转换天气代码为可读的天气描述
+            const weatherDescription = getWeatherDescription(weatherCode);
+            
+            // 更新天气显示，先检查元素是否存在
+            const weatherInfoEl = document.getElementById('weather-info');
+            if (weatherInfoEl) {
+              weatherInfoEl.textContent = `${weatherDescription} ${tempMin}-${tempMax}°C`;
+            } else {
+              debugLog('警告: weather-info元素未找到');
+            }
+            
+            // 记录调试信息
+            debugLog(`成功获取天气数据: ${weatherDescription} ${tempMin}-${tempMax}°C (日期: ${data.daily.time[dataIndex] || yesterdayDateStr})`);
+          } else {
+            // 数据结构不完整时使用默认值
+            console.error('返回的天气数据结构不完整:', data);
+            // 先检查元素是否存在
+            const weatherInfoEl = document.getElementById('weather-info');
+            if (weatherInfoEl) {
+              weatherInfoEl.textContent = '晴 18-25°C';
+            }
+            debugLog('天气数据结构不完整，使用默认值');
+          }
+        } else {
+          console.error('天气数据请求失败:', response.status);
+          // 先检查元素是否存在
+          const weatherInfoEl = document.getElementById('weather-info');
+          if (weatherInfoEl) {
+            weatherInfoEl.textContent = '晴 18-25°C';
+          }
+          debugLog('Open-Meteo API请求失败: ' + response.status + '，使用默认天气数据');
+        }
+      } catch (error) {
+        console.error('天气数据获取错误:', error);
+        // 先检查元素是否存在
+        const weatherInfoEl = document.getElementById('weather-info');
+        if (weatherInfoEl) {
+          weatherInfoEl.textContent = '晴 18-25°C';
+        }
+        debugLog('天气数据获取异常: ' + error.message + '，使用默认天气数据');
+      }
+    }
+    
+    // 将Open-Meteo的天气代码转换为中文描述
+    function getWeatherDescription(code) {
+      // 天气代码映射表（基于Open-Meteo的WMO代码标准）
+      const weatherMap = {
+        0: '晴',
+        1: '晴间多云',
+        2: '多云',
+        3: '阴',
+        45: '雾',
+        48: '霾',
+        51: '毛毛雨',
+        53: '小雨',
+        55: '中雨',
+        56: '冻毛毛雨',
+        57: '冻雨',
+        61: '小阵雨',
+        63: '阵雨',
+        65: '强阵雨',
+        66: '冻小雨',
+        67: '冻大雨',
+        71: '小雪',
+        73: '雪',
+        75: '大雪',
+        77: '雪粒',
+        80: '小雷阵雨',
+        81: '雷阵雨',
+        82: '强雷阵雨',
+        85: '小阵雪',
+        86: '阵雪',
+        95: '雷暴',
+        96: '雷暴伴冰雹',
+        99: '强雷暴伴冰雹'
+      };
+      
+      return weatherMap[code] || '未知天气';
+    }
+    
+    // 调用天气查询函数
+    fetchWeatherData();
+    
+    // DOM元素
+    const loginPage = document.getElementById('login-page');
+    const dashboardPage = document.getElementById('dashboard-page');
+    const loginForm = document.getElementById('login-form');
+    const logoutBtn = document.getElementById('logout-btn');
+    const dataTableBody = document.getElementById('data-table-body');
+    const searchInput = document.getElementById('search-input');
+
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const showingCountEl = document.getElementById('showing-count');
+    const totalCountEl = document.getElementById('total-count');
+    
+    // 登录处理
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      // 简单的登录验证（实际项目中应该发送到服务器验证）
+      if (username && password) {
+        // 显示仪表盘
+        loginPage.classList.add('hidden');
+        dashboardPage.classList.remove('hidden');
+        
+        // 渲染表格数据
+        renderTableData();
+        
+        // 保存登录状态到localStorage
+        localStorage.setItem('isLoggedIn', 'true');
+      } else {
+        alert('请输入用户名和密码');
+      }
+    });
+    
+    // 退出登录处理
+    logoutBtn.addEventListener('click', function() {
+      // 清除登录状态
+      localStorage.removeItem('isLoggedIn');
+      
+      // 显示登录页面
+      dashboardPage.classList.add('hidden');
+      loginPage.classList.remove('hidden');
+      
+      // 重置表单
+      loginForm.reset();
+    });
+    
+
+    
+
+    
+    // 生成发电曲线SVG或加载本地截图
+    function generatePowerCurveSVG(projectId) {
+        // 尝试加载多种可能的截图路径
+        const today = new Date();
+        const dateStr = today.getFullYear() + 
+                       String(today.getMonth() + 1).padStart(2, '0') + 
+                       String(today.getDate()).padStart(2, '0');
+        const timestamp = new Date().getTime();
+        
+        // 根据项目ID设置不同的图片路径
+        let screenshotPaths = [];
+        if (projectId === 5) {
+            // 黄河植物园项目 - 优先加载固定名称的截图
+            screenshotPaths = [
+                `screenshots/power_curve_5.png`,
+                `screenshots/sems_element_goodwe-station-charts__chart_${dateStr}_*.png`,
+                `screenshots/sems_element_goodwe-station-charts__chart_*.png`
+            ];
+        } else {
+            // 其他项目使用原有命名规则
+            screenshotPaths = [
+                `screenshots/power_curve_${projectId}.png`,
+                `screenshots/sems_screenshot_${dateStr}_*.png`
+            ];
+        }
+        
+        // 返回HTML字符串只包含截图，不包含SVG回退方案
+        return `
+            <div class="power-curve-container" data-project-id="${projectId}">
+                <img 
+                    class="power-curve-image" 
+                    alt="项目 ${projectId} 今日发电曲线" 
+                    src="${screenshotPaths[0]}?t=${timestamp}" 
+                    style="width: 100%; max-height: 300px; object-fit: contain;" 
+                    onload="hideOtherImages(this)" 
+                    onerror="loadFallbackImage(this, ${projectId})"
+                />
+            </div>
+        `;
+    }
+    
+    // 增强版发电曲线生成函数 - 用于黄河植物园项目
+    function enhancedGeneratePowerCurveSVG(projectId) {
+        // 返回HTML字符串只包含截图，不包含SVG回退方案
+        const timestamp = new Date().getTime();
+        return `
+            <div class="power-curve-container" data-project-id="5">
+                <img 
+                    class="power-curve-image" 
+                    alt="黄河植物园今日发电曲线" 
+                    src="screenshots/power_curve_5.png?t=${timestamp}" 
+                    style="width: 100%; max-height: 300px; object-fit: contain;" 
+                    onload="hideOtherImages(this)" 
+                    onerror="loadFallbackImage(this, 5)"
+                />
+            </div>
+        `;
+    }
+    
+    // 辅助函数：当一个图片加载成功时，隐藏其他图片
+    function hideOtherImages(loadedImg) {
+      const parent = loadedImg.parentNode;
+      const otherImages = parent.querySelectorAll('img');
+      otherImages.forEach(img => {
+        if (img !== loadedImg) {
+          img.style.display = 'none';
+        }
+      });
+    }
+    
+    // 当主图片加载失败时，加载备选图片
+    function loadFallbackImage(imgElement, projectId) {
+      // 获取当前日期
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      
+      // 备选图片路径
+      const fallbackPaths = [
+        `screenshots/power_curve_${projectId}.png`,
+        `screenshots/power_curve_${projectId}_${dateStr}.png`,
+        `screenshots/after_login_debug.png`
+      ];
+      
+      // 尝试加载备选图片
+      for (let i = 0; i < fallbackPaths.length; i++) {
+        const fallbackImg = new Image();
+        fallbackImg.onload = function() {
+          imgElement.src = fallbackPaths[i] + '?t=' + new Date().getTime();
+          imgElement.style.display = 'block';
+        };
+        fallbackImg.src = fallbackPaths[i] + '?t=' + new Date().getTime();
+      }
+    }
+    
+    // 渲染表格数据 - 调用带更新数据的渲染函数
+    function renderTableData() {
+      // 计算总发电量
+      const currentTotalGeneration = energyProjectData.reduce((sum, project) => sum + project.dailyGeneration, 0);
+      
+      // 调用带更新数据的渲染函数
+      renderTableDataWithUpdatedData(filteredData, currentTotalGeneration);
+    }
+    
+    // 页面加载时直接尝试加载太阳能数据
+    document.addEventListener('DOMContentLoaded', function() {
+      // 尝试直接加载太阳能数据（无论登录状态如何）
+      loadSolarDataFromJson().then(jsonData => {
+        if (jsonData && jsonData.length > 0) {
+          console.log('预加载太阳能数据成功');
+        }
+      }).catch(error => {
+        console.log('预加载太阳能数据失败，将在登录后重试');
+      });
+    });
+    
+    // 检查并加载本地爬虫数据
+    async function checkAndLoadCrawlerData() {
+      // 首先尝试从JSON文件加载实际的发电数据
+      try {
+        const jsonData = await loadSolarDataFromJson();
+        if (jsonData && jsonData.length > 0) {
+          // 有真实的JSON数据
+          console.log(`从JSON文件加载到 ${jsonData.length} 个项目的实际数据`);
+          updateDashboardData(jsonData);
+          return;
+        }
+      } catch (error) {
+        console.error('加载JSON数据失败:', error);
+      }
+      
+      // 如果JSON数据加载失败，检查是否有爬虫截图文件存在
+      const projectsWithScreenshots = [];
+      
+      for (const project of baseProjectData) {
+        const screenshotPath = `screenshots/power_curve_${project.id}.png`;
+        
+        // 创建一个Promise来检查文件是否存在
+        const fileExists = await new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('HEAD', screenshotPath, true);
+          xhr.onload = function() {
+            resolve(xhr.status === 200);
+          };
+          xhr.onerror = function() {
+            resolve(false);
+          };
+          xhr.send();
+        });
+        
+        if (fileExists) {
+          projectsWithScreenshots.push(project.id);
+        }
+      }
+      
+      console.log(`找到 ${projectsWithScreenshots.length} 个项目的爬虫截图`);
+      
+      // 根据是否有爬虫数据决定使用哪种方式初始化数据
+      if (projectsWithScreenshots.length > 0) {
+        // 有爬虫数据，使用这些项目的数据
+        loadDashboardWithCrawlerData();
+      } else {
+        // 没有爬虫数据，使用默认的占位数据
+        loadDashboardWithDefaultData();
+      }
+    }
+    
+    // 从JSON文件加载太阳能数据
+    async function loadSolarDataFromJson() {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'data/solar_data_2025-09-27.json?t=' + new Date().getTime(), true);
+        xhr.responseType = 'json';
+        
+        xhr.onload = function() {
+          if (xhr.status === 200 && xhr.response) {
+            debugLog('原始JSON数据: ' + JSON.stringify(xhr.response));
+            
+            // 检查是否有嵌套的数据字段
+            if (xhr.response.data) {
+              debugLog('提取嵌套数据: ' + JSON.stringify(xhr.response.data));
+              // 在控制台显示每个项目的dailyGeneration值
+              if (Array.isArray(xhr.response.data)) {
+                xhr.response.data.forEach(project => {
+                  debugLog(`项目 ${project.id} (${project.name}): dailyGeneration = ${project.dailyGeneration}`);
+                });
+              }
+              resolve(xhr.response.data);
+            } else {
+              // 如果没有嵌套的data字段，直接使用response
+              if (Array.isArray(xhr.response)) {
+                // 在控制台显示每个项目的dailyGeneration值
+                xhr.response.forEach(project => {
+                  debugLog(`项目 ${project.id} (${project.name}): dailyGeneration = ${project.dailyGeneration}`);
+                });
+              }
+              resolve(xhr.response);
+            }
+          } else {
+          debugLog('无法加载JSON数据，状态码: ' + xhr.status);
+          reject(new Error(`无法加载JSON数据，状态码: ${xhr.status}`));
+        }
+        };
+        
+        xhr.onerror = function() {
+          debugLog('加载JSON数据时发生网络错误');
+          reject(new Error('加载JSON数据时发生网络错误'));
+        };
+        
+        xhr.send();
+      });
+    }
+    
+    // 加载爬虫数据到仪表盘
+    function loadDashboardWithCrawlerData() {
+      console.log('正在加载爬虫数据...');
+      
+      // 为每个项目创建完整的数据对象
+      energyProjectData = baseProjectData.map(project => {
+        // 假设我们从本地文件或其他方式获取实时数据
+        // 在实际场景中，这里可能需要从后端API或本地JSON文件获取数据
+        // 这里我们暂时使用一些合理的默认值，实际应用中应该替换为真实数据来源
+        const dailyGeneration = project.dcCapacity * 5.5 * 1000; // 简单估算
+        
+        // 计算等效利用小时：日发电量 / 直流侧容量 / 1000
+        const efficiencyHours = dailyGeneration / project.dcCapacity / 1000;
+        
+        // 计算效率颜色
+        let efficiencyColor = 'bg-green-500'; // 默认绿色
+        if (efficiencyHours < 5.5) {
+          efficiencyColor = 'bg-yellow-400'; // 黄色
+        }
+        if (efficiencyHours < 5.0) {
+          efficiencyColor = 'bg-red-500'; // 红色
+        }
+        
+        // 只有前五个项目显示平均利用小时
+        const avgEfficiencyHours = project.id <= 5 ? 5.83 : null;
+        
+        return {
+          ...project,
+          dailyGeneration: dailyGeneration,
+          efficiencyHours: efficiencyHours,
+          avgEfficiencyHours: avgEfficiencyHours,
+          efficiencyColor: efficiencyColor
+        };
+      });
+      
+      filteredData = [...energyProjectData];
+      renderTableData();
+      
+      console.log('爬虫数据加载完成');
+    }
+    
+    // 加载默认数据到仪表盘
+    function loadDashboardWithDefaultData() {
+      console.log('正在加载默认数据...');
+      
+      // 使用默认的占位数据
+      energyProjectData = baseProjectData.map(project => {
+        const dailyGeneration = 0;
+        // 计算等效利用小时：日发电量 / 直流侧容量 / 1000
+        const efficiencyHours = dailyGeneration / project.dcCapacity / 1000;
+        const efficiencyColor = 'bg-gray-400';
+        const avgEfficiencyHours = project.id <= 5 ? 0 : null;
+        
+        return {
+          ...project,
+          dailyGeneration: dailyGeneration,
+          efficiencyHours: efficiencyHours,
+          avgEfficiencyHours: avgEfficiencyHours,
+          efficiencyColor: efficiencyColor
+        };
+      });
+      
+      filteredData = [...energyProjectData];
+      renderTableData();
+      
+      console.log('默认数据加载完成');
+    }
+    
+    // 使用从JSON加载的实际数据更新仪表盘
+    function updateDashboardData(jsonData) {
+      debugLog('接收到的JSON数据数组: ' + JSON.stringify(jsonData));
+      
+      // 确保JSON数据格式正确
+      if (jsonData && jsonData.data && Array.isArray(jsonData.data)) {
+        // 如果JSON数据有嵌套的data字段，使用它
+        jsonData = jsonData.data;
+      }
+      
+      // 确保jsonData是数组
+      if (!Array.isArray(jsonData)) {
+        console.error('JSON数据格式不正确，不是数组:', jsonData);
+        return;
+      }
+      
+      // 创建包含实际数据的项目数组
+      energyProjectData = jsonData.map(projectData => {
+        console.log('处理项目数据:', projectData.id, projectData.name, 'dailyGeneration:', projectData.dailyGeneration);
+        
+        // 确保使用JSON数据中的dailyGeneration值，即使为0
+        const dailyGeneration = projectData.dailyGeneration !== undefined ? projectData.dailyGeneration : 0;
+        
+        // 找到对应的基础项目数据
+        const baseProject = baseProjectData.find(p => p.id === projectData.id) || {};
+        
+        // 优先使用JSON数据中的项目名称
+        const projectName = projectData.name || baseProject.name || `项目${projectData.id}`;
+        
+        // 获取容量数据，如果JSON中没有则使用基础数据
+        const dcCapacity = projectData.dcCapacity !== undefined ? projectData.dcCapacity : (baseProject.dcCapacity || 0);
+        const acCapacity = projectData.acCapacity !== undefined ? projectData.acCapacity : (baseProject.acCapacity || 0);
+        
+        // 始终使用正确的算法计算效率小时数：日发电量 / 直流容量 / 1000
+        let efficiencyHours = 0;
+        if (dcCapacity && dailyGeneration) {
+          efficiencyHours = parseFloat((dailyGeneration / dcCapacity / 1000).toFixed(2));
+        }
+        
+        // 使用JSON数据中提供的效率颜色，如果没有则计算
+        let efficiencyColor = projectData.efficiencyColor;
+        if (!efficiencyColor) {
+          efficiencyColor = 'bg-green-500'; // 默认绿色
+          if (efficiencyHours < 5.5) {
+            efficiencyColor = 'bg-yellow-400'; // 黄色
+          }
+          if (efficiencyHours < 5.0) {
+            efficiencyColor = 'bg-red-500'; // 红色
+          }
+        }
+        
+        // 只有前五个项目显示平均利用小时
+        const avgEfficiencyHours = projectData.id <= 5 ? 5.83 : null;
+        
+        return {
+          id: projectData.id,
+          name: projectName,
+          dcCapacity: dcCapacity,
+          acCapacity: acCapacity,
+          dailyGeneration: dailyGeneration,
+          efficiencyHours: efficiencyHours,
+          efficiencyColor: efficiencyColor,
+          avgEfficiencyHours: avgEfficiencyHours,
+          date: projectData.date || new Date().toISOString().split('T')[0],
+          isSimulated: false, // 标记为真实数据
+          power_curve: projectData.power_curve || { data_points: [] }
+        };
+      });
+      
+      filteredData = [...energyProjectData];
+      
+      console.log('最终处理后的项目数据:', energyProjectData);
+      
+      // 计算总发电量
+      const updatedTotalGeneration = energyProjectData.reduce((sum, project) => sum + project.dailyGeneration, 0);
+      
+      console.log('总发电量:', updatedTotalGeneration);
+      
+      // 重新渲染表格时使用更新后的数据
+      renderTableDataWithUpdatedData(energyProjectData, updatedTotalGeneration);
+      
+      // 更新最后更新时间
+      const lastUpdateElem = document.getElementById('last-update-time');
+      if (lastUpdateElem) {
+        lastUpdateElem.textContent = new Date().toLocaleString();
+      }
+      
+      // 显示数据更新通知
+      showDataUpdateNotification();
+    }
+    
+    // 带更新数据的表格渲染函数
+    // 使用更新后的数据渲染表格
+    function renderTableDataWithUpdatedData(projects, totalGen) {
+      const dataTableBody = document.getElementById('data-table-body');
+      if (!dataTableBody) {
+        console.error('找不到数据表格体');
+        return;
+      }
+      
+      // 清空表格内容
+      dataTableBody.innerHTML = '';
+      
+      if (!projects || projects.length === 0) {
+        // 显示空数据状态
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = `
+          <td colspan="7" class="px-4 py-8 text-center text-gray-500">暂无数据</td>
+        `;
+        dataTableBody.appendChild(emptyRow);
+      } else {
+        // 计算所有六个项目的等效利用小时平均值
+        const totalEfficiencyHours = projects.reduce((sum, project) => sum + parseFloat(project.efficiencyHours || 0), 0);
+        const avgEfficiencyHours = (totalEfficiencyHours / projects.length).toFixed(2);
+        
+        // 计算前五个项目的平均利用小时
+        const firstFiveProjects = projects.slice(0, 5);
+        const firstFiveAvgHoursValue = parseFloat(firstFiveProjects.reduce((sum, project) => sum + parseFloat(project.efficiencyHours || 0), 0) / firstFiveProjects.length);
+        const firstFiveAvgHours = firstFiveAvgHoursValue.toFixed(2);
+        
+        // 计算百分比阈值
+        const fivePercentAbove = firstFiveAvgHoursValue * 1.05;
+        const tenPercentAbove = firstFiveAvgHoursValue * 1.10;
+        const fivePercentBelow = firstFiveAvgHoursValue * 0.95;
+        const tenPercentBelow = firstFiveAvgHoursValue * 0.90;
+        const fifteenPercentBelow = firstFiveAvgHoursValue * 0.85;
+        
+        // 添加数据行
+        projects.forEach((project, index) => {
+          console.log(`渲染项目数据 - ID:${project.id}, 名称:${project.name}, 日发电量:${project.dailyGeneration}`);
+          
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-gray-50 transition-colors';
+          
+          // 移除特殊样式，所有项目使用统一字体
+          const dailyGenerationClass = '';
+          
+          // 确定等效利用小时的填充色
+          let efficiencyColorClass = '';
+          const projectEfficiency = parseFloat(project.efficiencyHours || 0);
+          
+          // id6项目（第六个项目）的等效利用小时表格填充色为白色
+          if (index === 5) {
+            efficiencyColorClass = 'bg-white text-gray-800';
+          } 
+          // 其他五个项目的等效利用小时的表格填充色逻辑
+          else if (index < 5) {
+            // 添加调试日志以查看实际数值
+            console.log(`阈值计算 - 平均利用小时值: ${firstFiveAvgHoursValue}, 等效利用小时: ${projectEfficiency}`);
+            console.log(`阈值: 5%以上=${fivePercentAbove.toFixed(4)}, 10%以上=${tenPercentAbove.toFixed(4)}, 5%以下=${fivePercentBelow.toFixed(4)}, 10%以下=${tenPercentBelow.toFixed(4)}, 15%以下=${fifteenPercentBelow.toFixed(4)}`);
+            
+            if (projectEfficiency >= tenPercentAbove) {
+              // 超过五个项目平均利用小时10%以上
+              efficiencyColorClass = 'bg-[#00B050] text-white'; // 绿色
+              console.log('分类: 超过10%以上 - 绿色');
+            } else if (projectEfficiency >= firstFiveAvgHoursValue) {
+              // 超过五个项目平均利用小时0-10%
+              efficiencyColorClass = 'bg-[#92D050] text-white'; // 浅绿色
+              console.log('分类: 超过0-10% - 浅绿色');
+            } else if (projectEfficiency >= fivePercentBelow) {
+              // 低于五个项目平均利用小时0-5%
+              efficiencyColorClass = 'bg-[#FFFF00] text-gray-800'; // 黄色
+              console.log('分类: 低于0-5% - 黄色');
+            } else if (projectEfficiency >= tenPercentBelow) {
+              // 低于五个项目平均利用小时5-10%
+              efficiencyColorClass = 'bg-[#FFC000] text-white'; // 橙色
+              console.log('分类: 低于5-10% - 橙色');
+            } else if (projectEfficiency >= fifteenPercentBelow) {
+              // 低于五个项目平均利用小时10-15%
+              efficiencyColorClass = 'bg-[#FFC000] text-white'; // 橙色
+              console.log('分类: 低于10-15% - 橙色');
+            } else {
+              // 低于五个项目平均利用小时15%以上
+              efficiencyColorClass = 'bg-[#FF3B3B] text-white'; // 红色
+              console.log('分类: 低于15%以上 - 红色');
+            }
+          }
+          
+          // 检查是否是第一个项目（零碳商业园）
+          if (index === 0) {
+            // 第一个项目，显示合并的单元格（合并前五个项目的平均利用小时）
+            row.innerHTML = `
+              <td class="px-4 py-3 border border-gray-300 text-sm">${project.name}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.dcCapacity.toFixed(5)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.acCapacity.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium ${efficiencyColorClass}">${project.efficiencyHours.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium bg-white font-bold" rowspan="5">${firstFiveAvgHours}</td>
+            `;
+          } else if (index < 5) {
+            // id2-id5项目，不显示最后一列（因为被第一个项目合并了）
+            row.innerHTML = `
+              <td class="px-4 py-3 border border-gray-300 text-sm">${project.name}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.dcCapacity.toFixed(5)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.acCapacity.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium ${efficiencyColorClass}">${project.efficiencyHours.toFixed(2)}</td>
+            `;
+          } else {
+            // 第六个及以后的项目，单独显示平均利用小时
+            row.innerHTML = `
+              <td class="px-4 py-3 border border-gray-300 text-sm">${project.name}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.dcCapacity.toFixed(5)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.acCapacity.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-sm text-right ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium ${efficiencyColorClass}">${project.efficiencyHours.toFixed(2)}</td>
+              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium">${project.avgEfficiencyHours ? project.avgEfficiencyHours.toFixed(2) : '-'}</td>
+            `;
+          }
+          
+          dataTableBody.appendChild(row);
+        });
+        
+        // 添加总计行
+        const totalRow = document.createElement('tr');
+        totalRow.className = 'bg-gray-50';
+        totalRow.innerHTML = `
+          <td class="px-4 py-3 border border-gray-300 text-sm font-medium">本日合计发电量</td>
+          <td class="px-4 py-3 border border-gray-300"></td>
+          <td class="px-4 py-3 border border-gray-300"></td>
+          <td class="px-4 py-3 border border-gray-300 text-sm text-right font-medium">${totalGen.toFixed(2)}</td>
+          <td class="px-4 py-3 border border-gray-300"></td>
+          <td class="px-4 py-3 border border-gray-300"></td>
+          <td class="px-4 py-3 border border-gray-300"></td>
+        `;
+        
+        dataTableBody.appendChild(totalRow);
+      }
+    }
+    
+    // 显示数据更新通知
+    function showDataUpdateNotification() {
+      const notification = document.getElementById('data-update-notification');
+      if (notification) {
+        // 显示通知
+        notification.classList.remove('translate-y-20', 'opacity-0');
+        notification.classList.add('translate-y-0', 'opacity-100');
+        
+        // 3秒后隐藏通知
+        setTimeout(() => {
+          notification.classList.remove('translate-y-0', 'opacity-100');
+          notification.classList.add('translate-y-20', 'opacity-0');
+        }, 3000);
+      }
+    }
+    
+    // 添加历史数据按钮点击处理功能
+    function setupHistoryDataButton() {
+      // 查找历史数据标题元素
+      const historyTitle = document.querySelector('div.date-navigation h3');
+      if (historyTitle) {
+        // 为历史数据标题添加点击效果和提示
+        historyTitle.classList.add('cursor-pointer', 'hover:text-blue-600', 'transition-colors');
+        historyTitle.title = '点击查看可用的历史数据';
+        
+        // 添加点击事件处理
+        historyTitle.addEventListener('click', function() {
+          // 检查reports目录下是否有历史数据文件
+          // 注意：由于安全限制，浏览器不能直接读取服务器文件系统
+          // 这里我们模拟一个简单的历史数据查看功能
+          alert('历史数据功能：系统会显示不同日期的发电数据报告\n\n当前可用的历史数据：\n- 2025年09月27日\n\n您可以在浏览器中访问：http://localhost:8000/reports/2025-09-27.html\n\n系统将在后续优化中提供更便捷的历史数据浏览体验。');
+          
+          // 可选：直接跳转到最新的历史数据文件
+          // window.location.href = '/reports/2025-09-27.html';
+        });
+        
+        console.log('历史数据按钮点击功能已设置');
+      } else {
+        console.log('未找到历史数据标题元素');
+      }
+    }
+
+    // 页面加载时检查登录状态
+    document.addEventListener('DOMContentLoaded', function() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      
+      if (isLoggedIn) {
+        loginPage.classList.add('hidden');
+        dashboardPage.classList.remove('hidden');
+        
+        // 更新最后更新时间
+        const lastUpdateElem = document.getElementById('last-update-time');
+        if (lastUpdateElem) {
+          lastUpdateElem.textContent = new Date().toLocaleString();
+        }
+        
+        // 检查并加载本地爬虫数据
+        checkAndLoadCrawlerData().catch(error => {
+          console.error('加载数据失败:', error);
+          // 如果获取失败，使用默认占位数据
+          loadDashboardWithDefaultData();
+        });
+        
+        // 设置历史数据按钮功能
+        setupHistoryDataButton();
+      }
+      
+      // 移除了爬虫模拟器初始化，因为我们现在使用真实的爬虫数据
+    });
+  </script>
+</body>
+</html>

@@ -65,6 +65,11 @@ class SEMSScreenshotTool:
         # 添加兼容性参数
         self.edge_options.add_argument('--disable-software-rasterizer')
         self.edge_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
+        # 添加无头模式配置，仅在CI环境中启用
+        # 为了方便本地调试，默认不启用无头模式
+        self.edge_options.add_argument('--no-sandbox')
+        self.edge_options.add_argument('--disable-dev-shm-usage')
+        self.edge_options.add_argument('--disable-gpu')
         self.edge_options.add_argument('--disable-site-isolation-trials')
         self.edge_options.add_argument('--no-sandbox')
         self.edge_options.add_argument('--disable-dev-shm-usage')
@@ -102,7 +107,7 @@ class SEMSScreenshotTool:
             3: {'dcCapacity': 5.3749, 'acCapacity': 4.3},     # 滨北南邱家
             4: {'dcCapacity': 1.16938, 'acCapacity': 1},      # 水立方
             5: {'dcCapacity': 0.10384, 'acCapacity': 0.1},    # 黄河植物园
-            6: {'dcCapacity': 1.65008, 'acCapacity': 1.58858}  # 零碳商业园
+            6: {'dcCapacity': 1.58858, 'acCapacity': 1.58858}  # 零碳商业园
         }
         
         # 项目名称映射
@@ -147,6 +152,9 @@ class SEMSScreenshotTool:
                 driver_path = None
                 if os.path.exists(os.path.join(os.getcwd(), 'msedgedriver.exe')):
                     driver_path = os.path.join(os.getcwd(), 'msedgedriver.exe')
+                    logger.info(f"使用本地Edge驱动: {driver_path}")
+                else:
+                    logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
                 
                 # 配置服务
                 self.driver_service = Service(
@@ -252,27 +260,48 @@ class SEMSScreenshotTool:
             # 方法1: 尝试通过JavaScript获取数据
             try:
                 logger.info('尝试通过JavaScript获取数据...')
-                js_code = """
-                return new Promise((resolve, reject) => {
+                
+                # 获取当前日期，用于构建请求参数
+                today = datetime.now()
+                formatted_date = today.strftime('%Y-%m-%d')
+                
+                js_code = f"""
+                return new Promise((resolve, reject) => {{
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', 'https://gopsapi.sems.com.cn/api/v2/Charts/GetChartByPlant', true);
                     xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.onreadystatechange = function() {
-                        if (xhr.readyState === 4) {
-                            if (xhr.status === 200) {
-                                try {
+                    
+                    // 使用浏览器当前的token
+                    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                    if (token) {{
+                        xhr.setRequestHeader('token', token);
+                    }}
+                    
+                    xhr.onreadystatechange = function() {{
+                        if (xhr.readyState === 4) {{
+                            if (xhr.status === 200) {{
+                                try {{
                                     resolve(JSON.parse(xhr.responseText));
-                                } catch (e) {
-                                    resolve({error: '解析响应失败', response: xhr.responseText});
-                                }
-                            } else {
-                                resolve({error: '请求失败', status: xhr.status});
-                            }
-                        }
-                    };
-                    // 使用空请求体，实际请求可能需要特定参数
-                    xhr.send(JSON.stringify({}));
-                });
+                                }} catch (e) {{
+                                    resolve({{error: '解析响应失败', response: xhr.responseText}});
+                                }}
+                            }} else {{
+                                resolve({{error: '请求失败', status: xhr.status}});
+                            }}
+                        }}
+                    }};
+                    
+                    // 使用正确的请求参数
+                    const payload = {{
+                        "id": "c5e69404-9026-41b1-b88f-233f6d36f12a",
+                        "date": "{formatted_date}",
+                        "range": 2,
+                        "chartIndexId": "1",
+                        "isDetailFull": ""
+                    }};
+                    
+                    xhr.send(JSON.stringify(payload));
+                }});
                 """
                 
                 data = self.driver.execute_script(js_code)
@@ -313,6 +342,34 @@ class SEMSScreenshotTool:
         except Exception as e:
             logger.error(f'收集GetChartByPlant响应时出错: {str(e)}')
         
+    def get_token_from_local_storage(self):
+        """
+        从localStorage获取登录后的token
+        :return: token字符串或None
+        """
+        try:
+            if not self.ensure_driver_alive():
+                logger.error('浏览器驱动会话不存在或已失效')
+                return None
+            
+            # 从localStorage获取token
+            token = self.driver.execute_script("return localStorage.getItem('token');")
+            
+            if token:
+                logger.info('成功从localStorage获取token')
+                return token
+            else:
+                logger.warning('localStorage中未找到token')
+                # 尝试从sessionStorage获取
+                token = self.driver.execute_script("return sessionStorage.getItem('token');")
+                if token:
+                    logger.info('成功从sessionStorage获取token')
+                    return token
+                return None
+        except Exception as e:
+            logger.error(f'获取token时出错: {str(e)}')
+            return None
+            
     def fetch_get_chart_by_plant_data(self, project_id="5"):
         """
         直接调用GetChartByPlant API获取数据
@@ -323,8 +380,12 @@ class SEMSScreenshotTool:
             # API URL和请求参数
             api_url = "https://gopsapi.sems.com.cn/api/v2/Charts/GetChartByPlant"
             
-            # 用户提供的token
-            token = "eyJ1aWQiOiJiYmNkMzkzYy1mNjYyLTQ3NDYtYTE3Yy01YWFkNjlhNDI2YWUiLCJ0aW1lc3RhbXAiOjE3NTg2NzQxNTQ1NTAsInRva2VuIjoiYTI4ODU0MmM5YzBlYTQ1MWEyYWM2M2RmOTQyNmNmNmIiLCJjbGllbnQiOiJ3ZWIiLCJ2ZXJzaW9uIjoiIiwibGFuZ3VhZ2UiOiJ6aC1DTiIsImxvZ2luX21hcmsiOiI2M2ViNmRiNy1hYmUyLTQyMDctODg4OS1hNGY1NGJkMTZjMzkifQ=="
+            # 从localStorage获取token
+            token = self.get_token_from_local_storage()
+            
+            if not token:
+                logger.error('无法获取有效token，无法调用API')
+                return None
             
             # 请求头
             headers = {
@@ -333,12 +394,13 @@ class SEMSScreenshotTool:
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
             }
             
-            # 请求体（根据API要求调整）
+            # 请求体 - 使用用户建议的正确参数格式
             payload = {
-                "id": project_id,
-                "timeDimension": "day",
-                "startTime": datetime.now().strftime("%Y-%m-%d 00:00:00"),
-                "endTime": datetime.now().strftime("%Y-%m-%d 23:59:59")
+                "id": "c5e69404-9026-41b1-b88f-233f6d36f12a",  # 用户建议的正确项目ID
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "range": 2,
+                "chartIndexId": "1",
+                "isDetailFull": ""
             }
             
             logger.info(f'正在调用GetChartByPlant API获取项目 {project_id} 的数据')
@@ -645,10 +707,10 @@ class SEMSScreenshotTool:
         try:
             logger.info(f'开始从API响应中提取发电量数据，共捕获{len(self.api_responses)}个响应')
             
-            # 初始化一个字典，用于存储每个项目的发电量数据
+            # 初始化一个字典，用于存储项目的发电量数据
             project_generations = {}
             
-            # 项目ID映射 - 主要关注黄河植物园项目（ID 5）
+            # 只处理项目ID 5的数据
             target_project_id = 5
             
             for response in self.api_responses:
@@ -689,47 +751,66 @@ class SEMSScreenshotTool:
                                 daily_generation = float(body['data']['generation'])
                     elif 'ver is not fund' in str(body):
                         # 处理用户提供的错误响应示例
-                        logger.warning('API返回"ver is not fund"错误，使用模拟数据')
-                        daily_generation = 500  # 使用模拟数据
+                        logger.warning('API返回"ver is not fund"错误')
+                        daily_generation = 0  # 不使用模拟数据，使用0
                     
                     # 保存项目的发电量数据
-                    if daily_generation > 0:
-                        project_generations[target_project_id] = daily_generation
-                        logger.info(f'成功提取项目 {target_project_id} 的发电量数据: {daily_generation} kWh')
+                    project_generations[target_project_id] = daily_generation
+                    logger.info(f'成功提取项目 {target_project_id} 的发电量数据: {daily_generation} kWh')
                     
                 except Exception as e:
                     logger.error(f'解析API响应时出错: {str(e)}')
             
-            # 如果没有从API响应中提取到数据，使用默认值
-            if not project_generations:
-                logger.warning('从API响应中未提取到有效数据，使用默认值')
-                project_generations[5] = 500  # 黄河植物园项目的默认数据
+            # 如果JSON文件已存在，读取现有数据
+            existing_data = {}
+            if os.path.exists(self.data_file_path):
+                try:
+                    with open(self.data_file_path, 'r', encoding='utf-8') as f:
+                        existing_content = json.load(f)
+                        if 'data' in existing_content:
+                            for project in existing_content['data']:
+                                existing_data[project['id']] = project
+                            logger.info(f'成功读取现有数据，共{len(existing_data)}个项目')
+                except Exception as e:
+                    logger.error(f'读取现有数据文件时出错: {str(e)}')
             
             # 为所有项目创建数据对象
             for project_id, project_name in self.project_names.items():
                 capacities = self.project_capacities.get(project_id, {'dcCapacity': 0, 'acCapacity': 0})
                 
-                # 使用提取的发电量数据，如果没有则为0
-                daily_generation = project_generations.get(project_id, 0)
-                
-                # 构建项目数据对象，只包含网站需要的字段
-                project_info = {
-                    "id": project_id,
-                    "name": project_name,
-                    "dcCapacity": capacities['dcCapacity'],
-                    "acCapacity": capacities['acCapacity'],
-                    "dailyGeneration": daily_generation,
-                    "power_curve": {
-                        "data_points": []
+                # 对于项目ID 5，使用新提取的数据；对于其他项目，使用现有数据（如果有）
+                if project_id == 5:
+                    daily_generation = project_generations.get(project_id, 0)
+                    logger.info(f'使用新提取的项目 {project_id} 数据: {daily_generation} kWh')
+                    
+                    # 构建项目数据对象，只包含网站需要的字段
+                    project_info = {
+                        "id": project_id,
+                        "name": project_name,
+                        "dcCapacity": capacities['dcCapacity'],
+                        "acCapacity": capacities['acCapacity'],
+                        "dailyGeneration": daily_generation,
+                        "power_curve": {
+                            "data_points": []
+                        }
                     }
-                }
-                
-                # 注意：根据index.html中的updateDashboardData函数，我们不应该设置以下字段：
-                # - efficiencyHours (网站会重新计算)
-                # - efficiencyColor (网站会重新计算)
-                # - avgEfficiencyHours (网站会根据id重新设置)
-                # - date (网站会自动添加)
-                # - isSimulated (网站会自动设置)
+                else:
+                    # 对于其他项目，保持现有数据不变
+                    if project_id in existing_data:
+                        project_info = existing_data[project_id]
+                        logger.info(f'保持项目 {project_id} 现有数据不变')
+                    else:
+                        # 如果是新项目，使用默认值
+                        project_info = {
+                            "id": project_id,
+                            "name": project_name,
+                            "dcCapacity": capacities['dcCapacity'],
+                            "acCapacity": capacities['acCapacity'],
+                            "dailyGeneration": 0,
+                            "power_curve": {
+                                "data_points": []
+                            }
+                        }
                 
                 power_data.append(project_info)
             
@@ -843,7 +924,7 @@ if __name__ == '__main__':
                     date_picker_element.click()
                     logger.info('成功点击class=station-date-picker_left的元素')
                     # 点击后等待页面响应
-                    time.sleep(2)
+                    time.sleep(5)
                 except Exception as e:
                     logger.warning(f'点击class=station-date-picker_left的元素时出错: {str(e)}')
                     # 即使点击失败也继续执行后续操作

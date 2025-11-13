@@ -69,6 +69,16 @@ class HuaweiFusionSolarScraper:
         self.edge_options.add_argument('--ssl-protocol=any')
         self.edge_options.add_argument('--disable-web-security')
         
+        # 在CI环境中运行的配置
+        # 只在明确指定headless=True或CI环境中启用无头模式
+        if self.headless:
+            logger.info("在CI环境中启用无头模式")
+            self.edge_options.add_argument('--headless')
+            self.edge_options.add_argument('--no-sandbox')
+            self.edge_options.add_argument('--disable-dev-shm-usage')
+        else:
+            logger.info("在本地环境中运行，显示浏览器界面")
+        
         # 增加用户代理，使用与当前浏览器匹配的UA
         self.edge_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0')
         
@@ -112,21 +122,22 @@ class HuaweiFusionSolarScraper:
                 attempt += 1
                 logger.info(f"第 {attempt}/{max_attempts} 次尝试启动浏览器...")
                 
-                # 使用本地的msedgedriver.exe
+                # 尝试使用本地的msedgedriver.exe，但在不存在时回退到系统PATH中的驱动
                 driver_path = os.path.join(os.getcwd(), 'msedgedriver.exe')
+                service = None
                 
                 # 检查驱动是否存在
-                if not os.path.exists(driver_path):
-                    logger.error(f"Edge驱动文件不存在: {driver_path}")
-                    raise FileNotFoundError(f"Edge驱动文件不存在: {driver_path}")
-                
-                logger.info(f"使用Edge驱动路径: {driver_path}")
-                
-                # 创建服务对象并配置
-                service = Service(
-                    driver_path,
-                    log_output=os.path.join(os.getcwd(), 'msedgedriver.log')  # 启用驱动日志
-                )
+                if os.path.exists(driver_path):
+                    logger.info(f"使用Edge驱动路径: {driver_path}")
+                    # 创建服务对象并配置
+                    service = Service(
+                        driver_path,
+                        log_output=os.path.join(os.getcwd(), 'msedgedriver.log')  # 启用驱动日志
+                    )
+                else:
+                    logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
+                    # 不指定驱动路径，让Selenium自动查找系统PATH中的驱动
+                    service = Service(log_output=os.path.join(os.getcwd(), 'msedgedriver.log'))
                 
                 # 设置服务日志级别
                 service.log_level = 'INFO'
@@ -1154,6 +1165,10 @@ class HuaweiFusionSolarScraper:
                         
                     # 设置截图路径
                     screenshot_path = os.path.join(self.screenshots_dir, f"power_curve_{project_id}.png")
+                    # 在截图前将鼠标移动到页面左上角，确保鼠标不在截图区域悬停
+                    ActionChains(self.driver).move_to_element_with_offset(self.driver.find_element(By.TAG_NAME, 'body'), 0, 0).perform()
+                    # 短暂等待确保鼠标移动完成
+                    time.sleep(0.5)
                     # 直接对根元素进行截图
                     screenshot_element.screenshot(screenshot_path)
                     logger.info(f"id3/id4项目截图成功，已保存至: {screenshot_path}")
@@ -1258,6 +1273,10 @@ class HuaweiFusionSolarScraper:
                     element_width = element_size['width']
                     element_height = element_size['height']
                     
+                    # 在截图前将鼠标移动到页面左上角，确保鼠标不在截图区域悬停
+                    ActionChains(self.driver).move_to_element_with_offset(self.driver.find_element(By.TAG_NAME, 'body'), 0, 0).perform()
+                    # 短暂等待确保鼠标移动完成
+                    time.sleep(0.5)
                     # 直接对元素进行截图
                     screenshot_element.screenshot(screenshot_path)
                     logger.info(f"使用元素直接截图成功，已保存至: {screenshot_path}")

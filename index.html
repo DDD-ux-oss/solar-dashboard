@@ -3,42 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录系统</title>
+  <title>新鼎能源项目管理系统</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <!-- 图表功能 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 爬虫模拟器 -->
-    <script src="crawler_simulator.js"></script>
-    <!-- 截图加载辅助工具 -->
-    <script src="screenshot_loader.js"></script>
+  <!-- 截图加载辅助工具 -->
+  <script src="screenshot_loader.js"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: '#3B82F6',
-            secondary: '#10B981',
-            accent: '#6366F1',
-            dark: '#1F2937',
+            primary: '#0F52BA', // 深蓝色作为主色调，代表专业和信任感
+            secondary: '#00A65A', // 绿色作为次要色调，代表环保和能源
+            accent: '#8A2BE2', // 紫色作为强调色
+            dark: '#111827', // 深色背景
+            light: '#F9FAFB', // 浅色背景
+            success: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+            info: '#3B82F6',
+            // 新增配色
+            solar: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
           },
           fontFamily: {
             inter: ['Inter', 'system-ui', 'sans-serif'],
           },
-        },
-      }
-    }
-  </script>
-    theme: {
-      extend: {
-        colors: {
-          primary: '#3B82F6',
-          secondary: '#10B981',
-          accent: '#6366F1',
-          dark: '#1F2937',
-        },
-        fontFamily: {
-          inter: ['Inter', 'system-ui', 'sans-serif'],
+          boxShadow: {
+            'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            'card-active': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            'elevated': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          },
+          spacing: {
+            '18': '4.5rem',
+            '28': '7rem',
+            '52': '13rem',
+          },
+          backgroundImage: {
+            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+            'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+          },
+          animation: {
+            'float': 'float 3s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce-slow': 'bounce 2s infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+          },
+          transitionProperty: {
+            'height': 'height',
+            'spacing': 'margin, padding',
+          },
         },
       }
     }
@@ -49,69 +79,233 @@
         content-visibility: auto;
       }
       .form-input-focus {
-        @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none;
+        @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none transition-all duration-300;
       }
       .btn-primary {
-        @apply bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:outline-none;
+        @apply bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:outline-none transform hover:-translate-y-0.5;
       }
       .btn-secondary {
-        @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg transition-all duration-300 focus:ring-2 focus:ring-gray-400/50 focus:ring-offset-2 focus:outline-none;
+        @apply bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-sm hover:shadow focus:ring-2 focus:ring-gray-400/50 focus:ring-offset-2 focus:outline-none;
+      }
+      .btn-icon {
+        @apply flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 hover:bg-gray-100 focus:outline-none;
       }
       .card {
-        @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl;
+        @apply bg-white rounded-xl shadow-card overflow-hidden transition-all duration-300 hover:shadow-card-hover transform hover:-translate-y-1;
+      }
+      .card-elevated {
+        @apply bg-white rounded-xl shadow-elevated overflow-hidden transition-all duration-300;
+      }
+      .table-row-hover {
+        @apply hover:bg-gray-50 transition-colors duration-150;
+      }
+      .table-row-active {
+        @apply bg-blue-50 border-l-4 border-primary;
+      }
+      
+      /* 增强表格边框样式 - 使用统一的黑色线条 */
+      #data-table {
+        border: 1px solid #000000;
+        border-collapse: collapse; /* 确保边框合并 */
+      }
+      
+      #data-table th {
+        border: 1px solid #000000; /* 所有边框都使用黑色 */
+        border-bottom: 2px solid #000000; /* 表头底部使用稍粗的边框 */
+      }
+      
+      #data-table td {
+        border: 1px solid #000000; /* 所有边框都使用黑色 */
+      }
+      
+      /* 确保表格行背景色不会覆盖边框 */
+      #data-table tr {
+        background-clip: padding-box;
+      }
+      .glass-effect {
+        @apply bg-white/80 backdrop-blur-md;
+      }
+      .glass-effect-dark {
+        @apply bg-dark/80 backdrop-blur-md text-white;
+      }
+      .glass-effect-solar {
+        @apply bg-solar-50/90 backdrop-blur-md;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+      .animate-slide-up {
+        animation: slideUp 0.5s ease-out;
+      }
+      .animate-pulse-light {
+        animation: pulseLight 2s infinite;
+      }
+      .animate-scale-in {
+        animation: scaleIn 0.3s ease-out;
+      }
+      .animate-slide-in-left {
+        animation: slideInLeft 0.5s ease-out;
+      }
+      .animate-slide-in-right {
+        animation: slideInRight 0.5s ease-out;
+      }
+      .animate-float {
+        animation: float 3s ease-in-out infinite;
+      }
+      .text-shadow {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      .text-shadow-lg {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .text-gradient {
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        background-image: linear-gradient(135deg, #0F52BA 0%, #3B82F6 100%);
+      }
+      .text-gradient-solar {
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        background-image: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+      }
+      .bg-gradient-primary {
+        background-image: linear-gradient(135deg, #0F52BA 0%, #3B82F6 100%);
+      }
+      .bg-gradient-solar {
+        background-image: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+      }
+      .bg-grid {
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e5e7eb' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+      .bg-grid-solar {
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23bbf7d0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+      .scrollbar-thin {
+        scrollbar-width: thin;
+      }
+      .scrollbar-thumb-rounded {
+        scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+      }
+      .scrollbar-thumb-rounded::-webkit-scrollbar {
+        width: 6px;
+      }
+      .scrollbar-thumb-rounded::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 3px;
+      }
+      .scrollbar-thumb-rounded::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulseLight {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+      }
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
       }
     }
   </style>
 </head>
-<body class="font-inter bg-gray-100 min-h-screen">
+<body class="font-inter bg-light min-h-screen antialiased">
     <!-- 数据更新通知区域 -->
-    <div id="data-update-notification" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center transform translate-y-20 opacity-0 transition-all duration-500 z-50">
-        <i class="fa fa-refresh mr-2"></i>
+    <div id="data-update-notification" class="fixed bottom-4 right-4 bg-secondary text-white px-4 py-3 rounded-lg shadow-lg flex items-center transform translate-y-20 opacity-0 transition-all duration-500 z-50 animate-fade-in">
+        <i class="fa fa-refresh mr-2 animate-spin"></i>
         <span>数据已更新</span>
     </div>
   <!-- 登录页面 -->
-  <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
-    <div class="card w-full max-w-md p-8">
+  <div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-accent/5 bg-grid overflow-hidden relative">
+    <!-- 装饰元素 -->
+    <div class="absolute -top-20 -right-20 w-80 h-80 bg-gradient-primary/10 rounded-full blur-3xl animate-pulse-slow"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-solar/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s"></div>
+    
+    <div class="card w-full max-w-md p-8 animate-slide-up relative z-10">
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i class="fa fa-sign-in text-primary text-2xl"></i>
+        <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-500 hover:scale-110 hover:shadow-lg animate-float">
+          <i class="fa fa-line-chart text-primary text-3xl"></i>
         </div>
-        <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark">用户登录</h1>
-        <p class="text-gray-500 mt-2">请输入您的用户名和密码</p>
+        <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gradient text-shadow-lg">新鼎能源项目管理系统</h1>
+        <p class="text-gray-500 mt-2 text-shadow">请输入您的用户名和密码进行登录</p>
       </div>
       
-      <form id="login-form" class="space-y-4">
-        <div class="space-y-2">
-          <label for="username" class="block text-sm font-medium text-gray-700">用户名</label>
+      <form id="login-form" class="space-y-6">
+        <div class="space-y-2 group">
+          <label for="username" class="block text-sm font-medium text-gray-700 transition-colors duration-300 group-hover:text-primary">用户名</label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fa fa-user text-gray-400"></i>
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 transition-colors duration-300 group-hover:text-primary">
+              <i class="fa fa-user"></i>
             </div>
-            <input type="text" id="username" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg form-input-focus transition-all" placeholder="请输入用户名" required>
+            <input type="text" id="username" class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg form-input-focus transition-all bg-white" placeholder="请输入用户名" required>
           </div>
         </div>
         
-        <div class="space-y-2">
-          <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
+        <div class="space-y-2 group">
+          <label for="password" class="block text-sm font-medium text-gray-700 transition-colors duration-300 group-hover:text-primary">密码</label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fa fa-lock text-gray-400"></i>
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 transition-colors duration-300 group-hover:text-primary">
+              <i class="fa fa-lock"></i>
             </div>
-            <input type="password" id="password" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg form-input-focus transition-all" placeholder="请输入密码" required>
+            <input type="password" id="password" class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg form-input-focus transition-all bg-white" placeholder="请输入密码" required>
           </div>
         </div>
         
         <div class="flex items-center justify-between">
           <div class="flex items-center">
-            <input id="remember-me" type="checkbox" class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary">
-            <label for="remember-me" class="ml-2 block text-sm text-gray-700">记住我</label>
+            <input id="remember-me" type="checkbox" class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary transition-all duration-300">
+            <label for="remember-me" class="ml-2 block text-sm text-gray-700 transition-colors duration-300 hover:text-primary">记住我</label>
           </div>
           <div class="text-sm">
             <a href="#" class="font-medium text-primary hover:text-primary/80 transition-colors">忘记密码？</a>
           </div>
         </div>
         
-        <button type="submit" class="w-full btn-primary">
+        <button type="submit" class="w-full btn-primary py-2.5">
           <i class="fa fa-sign-in mr-2"></i>登录
         </button>
       </form>
@@ -121,90 +315,153 @@
       </div>
     </div>
   </div>
+
+
   
   <!-- 仪表盘页面 (默认隐藏) -->
-    <div id="dashboard-page" class="hidden min-h-screen">
-      <!-- 最后更新时间显示 -->
-      <div class="absolute top-4 right-4 text-sm text-gray-500">
-        最后更新时间: <span id="last-update-time">--</span>
-      </div>
+    <div id="dashboard-page" class="hidden min-h-screen bg-light">
     <!-- 顶部导航栏 -->
-    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-10">
+    <header class="glass-effect shadow-md fixed top-0 left-0 right-0 z-10 transition-all duration-300">
       <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <i class="fa fa-line-chart text-primary text-xl"></i>
-          <h1 class="text-lg font-bold text-dark">新鼎能源项目日报</h1>
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center shadow-lg">
+            <i class="fa fa-line-chart text-white text-xl"></i>
+          </div>
+          <h1 class="text-xl font-bold text-gradient text-shadow">新鼎能源项目日报</h1>
         </div>
         
-        <div class="flex items-center space-x-4">
-          <div class="relative">
-            <button id="logout-btn" class="btn-secondary">
-              <i class="fa fa-sign-out mr-2"></i>退出登录
-            </button>
+        <div class="flex items-center space-x-3">
+          <div class="hidden sm:flex items-center space-x-4">
+            <div class="text-sm text-gray-600 flex items-center bg-white/60 px-3 py-1.5 rounded-full shadow-sm">
+              <i class="fa fa-clock-o mr-2 text-primary"></i>
+              <span id="last-update-time">--</span>
+            </div>
           </div>
+          <button class="btn-icon hover:text-primary transition-colors duration-300" aria-label="刷新" id="refresh-btn">
+            <i class="fa fa-refresh text-gray-600 transition-transform duration-500 hover:rotate-180"></i>
+          </button>
+          <button id="logout-btn" class="btn-secondary hover:text-primary transition-colors duration-300">
+            <i class="fa fa-sign-out mr-2"></i>
+            <span class="hidden sm:inline">退出登录</span>
+          </button>
         </div>
       </div>
     </header>
     
     <!-- 主内容区域 -->
-    <main class="container mx-auto px-4 pt-24 pb-12">
-      <div class="card p-6 mb-6">
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-dark">项目发电数据报表</h2>
-            <div class="text-gray-500 text-sm">
-              <span>日期：</span><span id="report-date">2025年9月1日</span><br>
-              <span>天气：</span><span id="weather-info">晴转雾 20-31°C</span>
-            </div>
-          </div>
-          
-          <div class="flex space-x-2 mb-6">
-            <div class="relative">
-              <input type="text" id="search-input" class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-input-focus transition-all w-full md:w-64" placeholder="搜索项目...">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fa fa-search text-gray-400"></i>
+    <main class="container mx-auto px-4 pt-28 pb-12">
+      <div class="card-elevated bg-white p-6 mb-6 animate-fade-in">
+        <!-- 报表标题和日期信息 -->
+        <div class="mb-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h2 class="text-2xl font-bold text-gradient-solar flex items-center">
+              <div class="w-10 h-10 rounded-lg bg-gradient-solar flex items-center justify-center shadow-md mr-3">
+                <i class="fa fa-bolt text-white"></i>
+              </div>
+              项目发电数据报表
+            </h2>
+            <div class="flex flex-wrap gap-3">
+              <div class="bg-gradient-to-r from-solar-50 to-blue-50 p-3 rounded-xl border border-solar-100 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
+                <div class="flex items-center text-gray-600 text-sm mb-1">
+                  <i class="fa fa-calendar-o mr-2 text-primary"></i>
+                  <span>报表日期：</span>
+                </div>
+                <div class="font-medium text-dark" id="report-date">2025年9月1日</div>
+              </div>
+              <div class="bg-gradient-to-r from-solar-50 to-blue-50 p-3 rounded-xl border border-solar-100 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
+                <div class="flex items-center text-gray-600 text-sm mb-1">
+                  <i class="fa fa-cloud mr-2 text-primary"></i>
+                  <span>天气状况：</span>
+                </div>
+                <div class="font-medium text-dark" id="weather-info">加载中...</div>
               </div>
             </div>
-            <button id="refresh-btn" class="btn-secondary">
-              <i class="fa fa-refresh"></i>
-            </button>
+
+
+          </div>
+          
+          <!-- 日期导航区域 -->
+          <div class="date-navigation bg-gradient-to-r from-solar-50 to-blue-50 p-4 rounded-xl border border-solar-100 shadow-md mb-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-medium text-dark flex items-center">
+                <i class="fa fa-history mr-2 text-primary"></i>
+                历史数据
+              </h3>
+              <button id="prev-month-btn" class="btn-icon hover:text-primary transition-colors duration-300">
+                <i class="fa fa-chevron-left text-gray-600"></i>
+              </button>
+              <span id="current-month" class="text-sm font-medium text-primary"></span>
+              <button id="next-month-btn" class="btn-icon hover:text-primary transition-colors duration-300">
+                <i class="fa fa-chevron-right text-gray-600"></i>
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2" id="date-buttons-container"></div>
           </div>
         </div>
+
+
+        </div>
         
-        <div class="overflow-x-auto">
-          <table class="min-w-full border-collapse table-fixed">
+        <!-- 数据表格 -->
+        <div class="overflow-x-auto rounded-xl shadow-md transition-all duration-300 hover:shadow-lg">
+          <div class="grid place-items-center p-8 bg-white rounded-xl" id="loading-indicator">
+            <div class="text-center">
+              <div class="w-16 h-16 border-4 border-solar-100 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+              <p class="text-gray-500">加载发电数据中...</p>
+            </div>
+          </div>
+          <table class="min-w-full border-collapse hidden" id="data-table">
             <thead>
-              <tr class="bg-gray-100">
-                <th class="px-2 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700" width="15%">项目名称</th>
-                <th class="px-2 py-2 border border-gray-300 text-right text-sm font-medium text-gray-700" width="10%">直流测容量(MWp)</th>
-                <th class="px-2 py-2 border border-gray-300 text-right text-sm font-medium text-gray-700" width="10%">交流测容量(MW)</th>
-                <th class="px-2 py-2 border border-gray-300 text-right text-sm font-medium text-gray-700" width="12%">本日发电量(kWh)</th>
-                <th class="py-2 border border-gray-300 text-center text-sm font-medium text-gray-700" width="33%">今日发电曲线</th>
-                <th class="px-2 py-2 border border-gray-300 text-center text-sm font-medium text-gray-700" width="10%">等效利用小时</th>
-                <th class="px-2 py-2 border border-gray-300 text-center text-sm font-medium text-gray-700" width="10%">平均利用小时</th>
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold tracking-wider bg-white text-gray-800 border-b border-gray-100" width="15%">项目名称</th>
+                <th class="px-6 py-4 text-right text-sm font-semibold tracking-wider bg-white text-gray-800 border-b border-gray-100" width="10%">直流测容量(MWp)</th>
+                <th class="px-6 py-4 text-right text-sm font-semibold tracking-wider bg-white text-gray-800 border-b border-gray-100" width="10%">交流测容量(MW)</th>
+                <th class="px-6 py-4 text-right text-sm font-semibold tracking-wider bg-white text-gray-800 border-b border-gray-100" width="12%">本日发电量(kWh)</th>
+                <th class="py-4 text-center text-sm font-semibold tracking-wider bg-white text-gray-800 border-b border-gray-100" width="33%">今日发电曲线</th>
+                <th class="px-6 py-4 text-center text-sm font-semibold tracking-wider bg-white text-gray-800 border-b border-gray-100" width="10%">等效利用小时</th>
+                <th class="px-6 py-4 text-center text-sm font-semibold tracking-wider bg-white text-gray-800 border-b border-gray-100" width="10%">平均利用小时</th>
               </tr>
             </thead>
-            <tbody id="data-table-body" class="bg-white">
+            <tbody id="data-table-body" class="bg-white divide-y divide-gray-100">
               <!-- 表格数据将通过JavaScript动态生成 -->
             </tbody>
           </table>
         </div>
         
         <!-- 日报说明 -->
-        <div class="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <p class="text-sm text-gray-700" id="report-summary">
-            本日天气晴转雾后，各光伏项目发电效能显著回升，等效利用小时均值达5.83h。滨北南邱家以6.29h领跑，梁才宋滩(6.21h)同步恢复高效运行，零碳商业园仍严重滞后。
-          </p>
+        <div class="mt-6 glass-effect p-5 rounded-xl border border-solar-100 shadow-md transition-all duration-300 hover:shadow-lg">
+          <div class="flex items-start">
+            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+              <i class="fa fa-info-circle text-primary text-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-medium text-dark mb-2 flex items-center">
+                日报说明
+                <span class="ml-2 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">每日更新</span>
+              </h3>
+              <p class="text-sm text-gray-700 leading-relaxed" id="report-summary">
+                本日天气晴转雾后，各光伏项目发电效能显著回升，等效利用小时均值达5.83h。滨北南邱家以6.29h领跑，梁才宋滩(6.21h)同步恢复高效运行，零碳商业园仍严重滞后。
+              </p>
+            </div>
+          </div>
         </div>
+
+
         
         <!-- 调试信息区域 -->
-        <div class="mt-6 bg-gray-900 p-4 rounded-lg border border-gray-700">
-          <h3 class="text-sm font-medium text-green-400 mb-2">调试信息</h3>
+        <div class="mt-6 bg-gray-900 p-5 rounded-lg border border-gray-700 transition-all duration-300 hover:border-gray-500">
+          <h3 class="text-sm font-medium text-green-400 mb-3 flex items-center cursor-pointer hover:text-green-300 transition-colors" id="toggle-debug">
+            <i class="fa fa-code mr-2"></i>
+            调试信息
+            <i class="fa fa-chevron-down ml-2 transition-transform duration-300" id="debug-chevron"></i>
+          </h3>
           <div id="debug-info" class="text-xs text-gray-300 font-mono max-h-40 overflow-y-auto whitespace-pre-wrap">
             <!-- 调试信息将通过JavaScript动态添加 -->
           </div>
         </div>
       </div>
+
+
     </main>
   </div>
   
@@ -225,24 +482,205 @@
       }
     }
     
+    // 调试信息区域切换显示
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleDebug = document.getElementById('toggle-debug');
+      const debugInfo = document.getElementById('debug-info');
+      const debugChevron = document.getElementById('debug-chevron');
+      
+      if (toggleDebug && debugInfo && debugChevron) {
+        // 初始隐藏调试信息
+        debugInfo.style.display = 'none';
+        
+        toggleDebug.addEventListener('click', function() {
+          if (debugInfo.style.display === 'none') {
+            debugInfo.style.display = 'block';
+            debugChevron.style.transform = 'rotate(180deg)';
+          } else {
+            debugInfo.style.display = 'none';
+            debugChevron.style.transform = 'rotate(0deg)';
+          }
+        });
+      }
+    });
+    
     // 项目容量基础数据（这些数据相对稳定，从原始数据中保留）
     const baseProjectData = [
-      { id: 1, name: '梁才宋滩', dcCapacity: 5.9826, acCapacity: 4.77 },
-      { id: 2, name: '杨柳雪李赞皇', dcCapacity: 1.94346, acCapacity: 1.7 },
-      { id: 3, name: '滨北南邱家', dcCapacity: 5.3749, acCapacity: 4.3 },
+      { id: 1, name: '宋滩', dcCapacity: 5.9826, acCapacity: 4.77 },
+      { id: 2, name: '李赞皇', dcCapacity: 1.94346, acCapacity: 1.7 },
+      { id: 3, name: '滨北南邱', dcCapacity: 5.3749, acCapacity: 4.3 },
       { id: 4, name: '水立方', dcCapacity: 1.16938, acCapacity: 1 },
       { id: 5, name: '黄河植物园', dcCapacity: 0.10384, acCapacity: 0.1 },
-      { id: 6, name: '零碳商业园', dcCapacity: 1.65008, acCapacity: 1.58858 }
+      { id: 6, name: '零碳商业园', dcCapacity: 1.58858, acCapacity: 1.58858 }
     ];
     
     // 从爬虫数据文件加载的实时数据
     let energyProjectData = [];
     let filteredData = [];
     
-    // 生成日期信息
+    // 生成日期信息 - 显示前一天的日期
     const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('report-date').textContent = today.toLocaleDateString('zh-CN', options);
+    document.getElementById('report-date').textContent = yesterday.toLocaleDateString('zh-CN', options);
+    
+    // 查询并显示前一天的天气信息
+    async function fetchWeatherData() {
+      try {
+        // 使用用户提供的Open-Meteo forecast API URL
+        // 此API包含过去1天的数据(past_days=1)和未来几天的预报
+        const apiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=37.4375&longitude=118&daily=temperature_2m_min,temperature_2m_max,weather_code&timezone=auto&past_days=1&forecast_days=1';
+        
+        debugLog('开始获取天气数据，API URL: ' + apiUrl);
+        const response = await fetch(apiUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // 记录完整的API响应，便于调试
+          debugLog('API响应数据: ' + JSON.stringify(data));
+          
+          // 检查数据结构是否完整
+          if (data && data.daily && 
+              Array.isArray(data.daily.temperature_2m_max) && 
+              Array.isArray(data.daily.temperature_2m_min) && 
+              Array.isArray(data.daily.weather_code) && 
+              data.daily.time && Array.isArray(data.daily.time)) {
+              
+            // 计算前一天的日期字符串，用于在返回的数据中查找对应日期
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const year = yesterday.getFullYear();
+            const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+            const day = String(yesterday.getDate()).padStart(2, '0');
+            const yesterdayDateStr = `${year}-${month}-${day}`;
+            
+            debugLog('计算的前一天日期: ' + yesterdayDateStr);
+            
+            // 查找前一天的数据索引 (past_days=1，所以通常是索引0)
+            let dataIndex = 0;
+            if (data.daily.time.length > 0) {
+              // 记录API返回的所有日期
+              debugLog('API返回的日期列表: ' + data.daily.time.join(', '));
+              
+              // 尝试精确匹配前一天的日期
+              const exactIndex = data.daily.time.findIndex(date => date === yesterdayDateStr);
+              // 如果找不到精确匹配，使用第一个数据点
+              dataIndex = exactIndex !== -1 ? exactIndex : 0;
+              debugLog('匹配的日期索引: ' + dataIndex + ' (精确匹配: ' + (exactIndex !== -1) + ')');
+            }
+            
+            // 使用默认值避免显示0-0°C
+            const tempMax = data.daily.temperature_2m_max[dataIndex] !== undefined ? Math.round(data.daily.temperature_2m_max[dataIndex]) : 25;
+            const tempMin = data.daily.temperature_2m_min[dataIndex] !== undefined ? Math.round(data.daily.temperature_2m_min[dataIndex]) : 18;
+            const weatherCode = data.daily.weather_code[dataIndex] !== undefined ? data.daily.weather_code[dataIndex] : 0; // 默认晴
+            
+            debugLog(`获取的天气原始数据: 最高温=${data.daily.temperature_2m_max[dataIndex]}°C, 最低温=${data.daily.temperature_2m_min[dataIndex]}°C, 天气代码=${weatherCode}`);
+            
+            // 转换天气代码为可读的天气描述
+            const weatherDescription = getWeatherDescription(weatherCode);
+            
+            // 更新天气显示
+            const weatherInfoElement = document.getElementById('weather-info');
+            if (weatherInfoElement) {
+              weatherInfoElement.textContent = `${weatherDescription} ${tempMin}-${tempMax}°C`;
+              debugLog(`成功更新天气显示: ${weatherDescription} ${tempMin}-${tempMax}°C (日期: ${data.daily.time[dataIndex] || yesterdayDateStr})`);
+            } else {
+              debugLog('未找到weather-info元素');
+            }
+          } else {
+            // 数据结构不完整时使用默认值
+            console.error('返回的天气数据结构不完整:', data);
+            document.getElementById('weather-info').textContent = '晴 18-25°C';
+            debugLog('天气数据结构不完整，使用默认值');
+          }
+        } else {
+          console.error('天气数据请求失败:', response.status);
+          document.getElementById('weather-info').textContent = '晴 18-25°C';
+          debugLog('Open-Meteo API请求失败: ' + response.status + '，使用默认天气数据');
+        }
+      } catch (error) {
+        console.error('天气数据获取错误:', error);
+        document.getElementById('weather-info').textContent = '晴 18-25°C';
+        debugLog('天气数据获取异常: ' + error.message + '，使用默认天气数据');
+      }
+    }
+    
+    // 将Open-Meteo的天气代码转换为中文描述
+    function getWeatherDescription(code) {
+      // 天气代码映射表（基于Open-Meteo的WMO代码标准）
+      const weatherMap = {
+        0: '晴',
+        1: '晴间多云',
+        2: '多云',
+        3: '阴',
+        45: '雾',
+        48: '霾',
+        51: '毛毛雨',
+        53: '小雨',
+        55: '中雨',
+        56: '冻毛毛雨',
+        57: '冻雨',
+        61: '小阵雨',
+        63: '阵雨',
+        65: '强阵雨',
+        66: '冻小雨',
+        67: '冻大雨',
+        71: '小雪',
+        73: '雪',
+        75: '大雪',
+        77: '雪粒',
+        80: '小雷阵雨',
+        81: '雷阵雨',
+        82: '强雷阵雨',
+        85: '小阵雪',
+        86: '阵雪',
+        95: '雷暴',
+        96: '雷暴伴冰雹',
+        99: '强雷暴伴冰雹'
+      };
+      
+      return weatherMap[code] || '未知天气';
+    }
+    
+    // 调用天气查询函数
+    fetchWeatherData();
+    
+    // 基于保存数据更新天气显示（选中日期）
+    function updateWeatherFromSaved(jsonData) {
+      try {
+        const reportDateElem = document.getElementById('report-date');
+        const weatherInfoElem = document.getElementById('weather-info');
+        const dateStr = (jsonData && jsonData.date) || (jsonData && jsonData.weather_data && jsonData.weather_data.date) || (window.currentSelectedDateStr || '');
+        if (reportDateElem && dateStr) {
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            const [y, m, d] = parts;
+            reportDateElem.textContent = `${y}年${String(m).padStart(2,'0')}月${String(d).padStart(2,'0')}日`;
+          }
+        }
+        const wd = (jsonData && jsonData.weather_data) || (jsonData && jsonData.generation_data && jsonData.generation_data.weather_data) || null;
+        if (weatherInfoElem) {
+          if (wd) {
+            const desc = wd.weather_description || getWeatherDescription(wd.weather_code || 0);
+            let tempText = '';
+            if (wd.temperature !== undefined && wd.temperature !== null) {
+              const t = Math.round(Number(wd.temperature));
+              if (!Number.isNaN(t)) {
+                tempText = ` ${t}°C`;
+              }
+            }
+            weatherInfoElem.textContent = `${desc}${tempText}`;
+          } else {
+            weatherInfoElem.textContent = '暂无数据';
+          }
+        }
+      } catch (e) {
+        console.warn('更新天气显示失败:', e);
+      }
+    }
     
     // DOM元素
     const loginPage = document.getElementById('login-page');
@@ -251,7 +689,7 @@
     const logoutBtn = document.getElementById('logout-btn');
     const dataTableBody = document.getElementById('data-table-body');
     const searchInput = document.getElementById('search-input');
-    const refreshBtn = document.getElementById('refresh-btn');
+
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
     const showingCountEl = document.getElementById('showing-count');
@@ -292,67 +730,89 @@
       loginForm.reset();
     });
     
-    // 搜索功能
-    searchInput.addEventListener('input', function() {
-      const searchTerm = this.value.toLowerCase().trim();
-      
-      // 过滤数据
-      filteredData = energyProjectData.filter(project => 
-        project.name.toLowerCase().includes(searchTerm)
-      );
-      
-      // 重新渲染表格
-      renderTableData();
-    });
+
     
-    // 刷新按钮
-    refreshBtn.addEventListener('click', function() {
-      // 重置搜索
-      searchInput.value = '';
-      
-      // 检查并重新加载爬虫数据
-      checkAndLoadCrawlerData().catch(error => {
-        console.error('刷新数据失败:', error);
-        // 如果刷新失败，使用当前已加载的数据重新渲染
-        renderTableData();
-      });
-      
-      // 添加刷新动画效果
-      this.classList.add('animate-spin');
-      setTimeout(() => {
-        this.classList.remove('animate-spin');
-      }, 500);
-    });
+
     
     // 生成发电曲线SVG或加载本地截图
     function generatePowerCurveSVG(projectId) {
         // 尝试加载多种可能的截图路径
         const today = new Date();
-        const dateStr = today.getFullYear() + 
-                       String(today.getMonth() + 1).padStart(2, '0') + 
+        const dateStr = today.getFullYear() + '-' + 
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
                        String(today.getDate()).padStart(2, '0');
+        // 也尝试前一天的日期，因为截图可能是昨天的
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.getFullYear() + '-' + 
+                           String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(yesterday.getDate()).padStart(2, '0');
+        // 同时也保留无连字符的格式以兼容旧文件
+        const dateStrNoDash = today.getFullYear() + 
+                             String(today.getMonth() + 1).padStart(2, '0') + 
+                             String(today.getDate()).padStart(2, '0');
+        const yesterdayStrNoDash = yesterday.getFullYear() + 
+                                 String(yesterday.getMonth() + 1).padStart(2, '0') + 
+                                 String(yesterday.getDate()).padStart(2, '0');
         const timestamp = new Date().getTime();
         
         // 根据项目ID设置不同的图片路径
         let screenshotPaths = [];
         if (projectId === 5) {
             // 黄河植物园项目 - 优先加载固定名称的截图
-            screenshotPaths = [
-                `screenshots/power_curve_5.png`,
-                `screenshots/sems_element_goodwe-station-charts__chart_${dateStr}_*.png`,
-                `screenshots/sems_element_goodwe-station-charts__chart_*.png`
-            ];
+                screenshotPaths = [
+                    `screenshots/power_curve_5.png`,
+                    `screenshots/${dateStr}/power_curve_5.png`,
+                    `screenshots/${yesterdayStr}/power_curve_5.png`,
+                    `screenshots/${dateStrNoDash}/power_curve_5.png`,
+                    `screenshots/${yesterdayStrNoDash}/power_curve_5.png`,
+                    `screenshots/sems_element_goodwe-station-charts__chart_${dateStr}_*.png`,
+                    `screenshots/sems_element_goodwe-station-charts__chart_*.png`
+                ];
         } else {
-            // 其他项目使用原有命名规则
-            screenshotPaths = [
-                `screenshots/power_curve_${projectId}.png`,
-                `screenshots/sems_screenshot_${dateStr}_*.png`
-            ];
+            // 其他项目使用原有命名规则（支持严格仅选中日期模式）
+            if (window.currentSelectedDateStr && window.enforceSelectedDateScreenshot) {
+                screenshotPaths = [
+                    `screenshots/${window.currentSelectedDateStr}/power_curve_${projectId}.png`,
+                    `screenshots/${window.currentSelectedDateStr}/after_login_debug.png`
+                ];
+            } else {
+                screenshotPaths = [
+                    `screenshots/power_curve_${projectId}.png`,
+                    `screenshots/${dateStr}/power_curve_${projectId}.png`,
+                    `screenshots/${yesterdayStr}/power_curve_${projectId}.png`,
+                    `screenshots/${dateStrNoDash}/power_curve_${projectId}.png`,
+                    `screenshots/${yesterdayStrNoDash}/power_curve_${projectId}.png`,
+                    `screenshots/sems_screenshot_${dateStr}_*.png`
+                ];
+                // 优先尝试选中日期的截图路径
+                if (window.currentSelectedDateStr) {
+                    screenshotPaths.unshift(`screenshots/${window.currentSelectedDateStr}/power_curve_${projectId}.png`);
+                }
+            }
         }
         
-        // 返回HTML字符串只包含截图，不包含SVG回退方案
-        return `
-            <div class="power-curve-container" data-project-id="${projectId}">
+        // 构建包含多个img标签的HTML，每个指向不同的路径
+        let imgTags = '';
+        screenshotPaths.forEach((path, index) => {
+            // 跳过可能有通配符的路径，因为这些需要特殊处理
+            if (!path.includes('*')) {
+                imgTags += `
+                    <img 
+                        class="power-curve-image" 
+                        alt="项目 ${projectId} 今日发电曲线 (尝试${index+1})" 
+                        src="${path}?t=${timestamp}" 
+                        style="width: 100%; max-height: 300px; object-fit: contain;" 
+                        onload="hideOtherImages(this)" 
+                        onerror="${index === screenshotPaths.length - 1 || path.includes('*') ? 'loadFallbackImage(this, ' + projectId + ')' : ''}"
+                    />
+                `;
+            }
+        });
+        
+        // 如果没有生成任何img标签，创建一个基础的img标签
+        if (!imgTags) {
+            imgTags = `
                 <img 
                     class="power-curve-image" 
                     alt="项目 ${projectId} 今日发电曲线" 
@@ -361,6 +821,13 @@
                     onload="hideOtherImages(this)" 
                     onerror="loadFallbackImage(this, ${projectId})"
                 />
+            `;
+        }
+        
+        // 返回HTML字符串只包含截图，不包含SVG回退方案
+        return `
+            <div class="power-curve-container" data-project-id="${projectId}">
+                ${imgTags}
             </div>
         `;
     }
@@ -368,17 +835,63 @@
     // 增强版发电曲线生成函数 - 用于黄河植物园项目
     function enhancedGeneratePowerCurveSVG(projectId) {
         // 返回HTML字符串只包含截图，不包含SVG回退方案
+        const today = new Date();
+        const dateStr = today.getFullYear() + '-' + 
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(today.getDate()).padStart(2, '0');
+        // 也尝试前一天的日期，因为截图可能是昨天的
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.getFullYear() + '-' + 
+                           String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(yesterday.getDate()).padStart(2, '0');
+        // 同时也保留无连字符的格式以兼容旧文件
+        const dateStrNoDash = today.getFullYear() + 
+                             String(today.getMonth() + 1).padStart(2, '0') + 
+                             String(today.getDate()).padStart(2, '0');
+        const yesterdayStrNoDash = yesterday.getFullYear() + 
+                                 String(yesterday.getMonth() + 1).padStart(2, '0') + 
+                                 String(yesterday.getDate()).padStart(2, '0');
         const timestamp = new Date().getTime();
-        return `
-            <div class="power-curve-container" data-project-id="5">
+        
+        // 尝试从多个可能的路径加载图片（支持严格仅选中日期模式）
+        let screenshotPaths = [];
+        if (window.currentSelectedDateStr && window.enforceSelectedDateScreenshot) {
+            screenshotPaths = [
+                `screenshots/${window.currentSelectedDateStr}/power_curve_5.png`,
+                `screenshots/${window.currentSelectedDateStr}/after_login_debug.png`
+            ];
+        } else {
+            screenshotPaths = [
+                `screenshots/power_curve_5.png`,
+                `screenshots/${dateStr}/power_curve_5.png`,
+                `screenshots/${yesterdayStr}/power_curve_5.png`,
+                `screenshots/${dateStrNoDash}/power_curve_5.png`,
+                `screenshots/${yesterdayStrNoDash}/power_curve_5.png`
+            ];
+            if (window.currentSelectedDateStr) {
+                screenshotPaths.unshift(`screenshots/${window.currentSelectedDateStr}/power_curve_5.png`);
+            }
+        }
+        
+        // 构建包含多个img标签的HTML，每个指向不同的路径
+        let imgTags = '';
+        screenshotPaths.forEach((path, index) => {
+            imgTags += `
                 <img 
                     class="power-curve-image" 
-                    alt="黄河植物园今日发电曲线" 
-                    src="screenshots/power_curve_5.png?t=${timestamp}" 
-                    style="width: 100%; max-height: 300px; object-fit: contain;" 
+                    alt="黄河植物园今日发电曲线 (尝试${index+1})" 
+                    src="${path}?t=${timestamp}" 
+                    style="width: 100%; max-height: 300px; object-fit: contain;"
                     onload="hideOtherImages(this)" 
-                    onerror="loadFallbackImage(this, 5)"
+                    onerror="${index === screenshotPaths.length - 1 ? 'loadFallbackImage(this, 5)' : ''}"
                 />
+            `;
+        });
+        
+        return `
+            <div class="power-curve-container" data-project-id="5">
+                ${imgTags}
             </div>
         `;
     }
@@ -396,25 +909,128 @@
     
     // 当主图片加载失败时，加载备选图片
     function loadFallbackImage(imgElement, projectId) {
-      // 获取当前日期
+      // 获取当前日期和前一天日期
       const today = new Date();
-      const dateStr = today.toISOString().split('T')[0];
+      const dateStr = today.getFullYear() + '-' + 
+                     String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                     String(today.getDate()).padStart(2, '0');
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.getFullYear() + '-' + 
+                         String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(yesterday.getDate()).padStart(2, '0');
+      // 同时也保留无连字符的格式以兼容旧文件
+      const dateStrNoDash = today.getFullYear() + 
+                           String(today.getMonth() + 1).padStart(2, '0') + 
+                           String(today.getDate()).padStart(2, '0');
+      const yesterdayStrNoDash = yesterday.getFullYear() + 
+                               String(yesterday.getMonth() + 1).padStart(2, '0') + 
+                               String(yesterday.getDate()).padStart(2, '0');
       
-      // 备选图片路径
-      const fallbackPaths = [
-        `screenshots/power_curve_${projectId}.png`,
-        `screenshots/power_curve_${projectId}_${dateStr}.png`,
-        `screenshots/after_login_debug.png`
-      ];
+      // 优化备选图片路径逻辑，增加更多特定于项目ID的路径尝试
+      // 将after_login_debug.png移到最后作为真正的最后备选
+      let fallbackPaths = [];
       
-      // 尝试加载备选图片
-      for (let i = 0; i < fallbackPaths.length; i++) {
-        const fallbackImg = new Image();
-        fallbackImg.onload = function() {
-          imgElement.src = fallbackPaths[i] + '?t=' + new Date().getTime();
+      // 严格模式：仅展示所选日期的截图，直接切换到该日期路径
+      if (window.currentSelectedDateStr && window.enforceSelectedDateScreenshot) {
+        const ts = new Date().getTime();
+        const primary = `screenshots/${window.currentSelectedDateStr}/power_curve_${projectId}.png?t=${ts}`;
+        const fallback = `screenshots/${window.currentSelectedDateStr}/after_login_debug.png?t=${ts}`;
+        // 显示“暂无数据”占位的辅助方法
+        function showNoData() {
+          const container = imgElement.closest('.power-curve-container');
+          if (container) {
+            // 隐藏图片
+            imgElement.style.display = 'none';
+            // 查找或创建占位元素
+            let placeholder = container.querySelector('.no-data-placeholder');
+            if (!placeholder) {
+              placeholder = document.createElement('div');
+              placeholder.className = 'no-data-placeholder text-gray-400 text-center text-sm py-4';
+              placeholder.textContent = '暂无数据';
+              container.appendChild(placeholder);
+            }
+            // 显示占位
+            placeholder.style.display = 'block';
+          }
+        }
+        // 尝试主图；失败则改为同日期的回退图；若兜底也失败则显示暂无数据
+        imgElement.onerror = function() {
+          imgElement.onerror = function() {
+            showNoData();
+          };
+          imgElement.src = fallback;
+        };
+        imgElement.onload = function() {
+          // 成功加载图片则隐藏占位
+          const container = imgElement.closest('.power-curve-container');
+          const placeholder = container ? container.querySelector('.no-data-placeholder') : null;
+          if (placeholder) {
+            placeholder.style.display = 'none';
+          }
+          if (typeof hideOtherImages === 'function') {
+            hideOtherImages(imgElement);
+          }
           imgElement.style.display = 'block';
         };
-        fallbackImg.src = fallbackPaths[i] + '?t=' + new Date().getTime();
+        imgElement.src = primary;
+        return;
+      } else {
+        // 宽松模式：优先所选日期，其次今天/昨天及其他备选
+        fallbackPaths = [
+          // 主要路径 - 直接命名的项目截图
+          `screenshots/power_curve_${projectId}.png`,
+          
+          // 日期子文件夹路径 - 带连字符格式
+          `screenshots/${dateStr}/power_curve_${projectId}.png`,
+          `screenshots/${yesterdayStr}/power_curve_${projectId}.png`,
+          
+          // 日期子文件夹路径 - 无连字符格式
+          `screenshots/${dateStrNoDash}/power_curve_${projectId}.png`,
+          `screenshots/${yesterdayStrNoDash}/power_curve_${projectId}.png`,
+          
+          // 带日期的文件名格式
+          `screenshots/power_curve_${projectId}_${dateStr}.png`,
+          `screenshots/power_curve_${projectId}_${dateStrNoDash}.png`,
+          
+          // 额外尝试的可能路径格式
+          `screenshots/power_curve_${projectId}_latest.png`,
+          `screenshots/${dateStr}/power_curve_${projectId}_latest.png`,
+          `screenshots/${yesterdayStr}/power_curve_${projectId}_latest.png`,
+          
+          // 最后才尝试通用图片作为真正的备选方案
+          `screenshots/after_login_debug.png`,
+          `screenshots/${dateStr}/after_login_debug.png`,
+          `screenshots/${yesterdayStr}/after_login_debug.png`,
+          `screenshots/${dateStrNoDash}/after_login_debug.png`,
+          `screenshots/${yesterdayStrNoDash}/after_login_debug.png`
+        ];
+        
+        // 优先尝试选中日期的截图路径
+        if (window.currentSelectedDateStr) {
+          fallbackPaths.unshift(`screenshots/${window.currentSelectedDateStr}/power_curve_${projectId}.png`);
+        }
+      }
+      
+      // 尝试加载备选图片（只采用第一个成功的路径）
+      let applied = false;
+      for (let i = 0; i < fallbackPaths.length; i++) {
+        const testPath = fallbackPaths[i] + '?t=' + new Date().getTime();
+        const fallbackImg = new Image();
+        fallbackImg.onload = function() {
+          if (applied) return; // 已经有成功的路径，不再覆盖
+          applied = true;
+          imgElement.src = testPath;
+          imgElement.style.display = 'block';
+          // 触发隐藏其他图片，保持单图显示
+          if (typeof hideOtherImages === 'function') {
+            hideOtherImages(imgElement);
+          }
+        };
+        fallbackImg.onerror = function() {
+          // 静默失败，继续尝试下一个路径
+        };
+        fallbackImg.src = testPath;
       }
     }
     
@@ -444,50 +1060,61 @@
       // 首先尝试从JSON文件加载实际的发电数据
       try {
         const jsonData = await loadSolarDataFromJson();
-        if (jsonData && jsonData.length > 0) {
+        // 注意：solar_data.json的格式是包含date、generation_data和weather_data字段的对象
+        if (jsonData && jsonData.generation_data && jsonData.generation_data.data && jsonData.generation_data.data.length > 0) {
           // 有真实的JSON数据
-          console.log(`从JSON文件加载到 ${jsonData.length} 个项目的实际数据`);
+          console.log(`从JSON文件加载到 ${jsonData.generation_data.data.length} 个项目的实际数据`);
+          updateDashboardData(jsonData);
+          return;
+        } else if (jsonData && Array.isArray(jsonData) && jsonData.length > 0) {
+          // 处理旧格式的JSON数据（直接是项目数据数组）
+          console.log(`从JSON文件加载到 ${jsonData.length} 个项目的实际数据(旧格式)`);
           updateDashboardData(jsonData);
           return;
         }
       } catch (error) {
         console.error('加载JSON数据失败:', error);
+        debugLog('加载JSON数据时出错: ' + error.message);
       }
       
-      // 如果JSON数据加载失败，检查是否有爬虫截图文件存在
-      const projectsWithScreenshots = [];
+      // 如果JSON数据加载失败，尝试直接使用预定义的模拟数据
+      console.log('无法加载JSON数据，使用模拟数据');
       
-      for (const project of baseProjectData) {
-        const screenshotPath = `screenshots/power_curve_${project.id}.png`;
+      // 使用模拟数据，确保显示的不是全0的数据
+      energyProjectData = baseProjectData.map(project => {
+        // 使用一些合理的模拟日发电量值，基于容量和合理的发电小时数
+        const dailyGeneration = project.dcCapacity * 5.5 * 1000; // 简单估算
         
-        // 创建一个Promise来检查文件是否存在
-        const fileExists = await new Promise(resolve => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('HEAD', screenshotPath, true);
-          xhr.onload = function() {
-            resolve(xhr.status === 200);
-          };
-          xhr.onerror = function() {
-            resolve(false);
-          };
-          xhr.send();
-        });
+        // 计算等效利用小时：日发电量 / 直流侧容量 / 1000
+        const efficiencyHours = dailyGeneration / project.dcCapacity / 1000;
         
-        if (fileExists) {
-          projectsWithScreenshots.push(project.id);
+        // 计算效率颜色
+        let efficiencyColor = 'bg-green-500'; // 默认绿色
+        if (efficiencyHours < 5.5) {
+          efficiencyColor = 'bg-yellow-400'; // 黄色
         }
-      }
+        if (efficiencyHours < 5.0) {
+          efficiencyColor = 'bg-red-500'; // 红色
+        }
+        
+        // 只有前五个项目显示平均利用小时
+        const avgEfficiencyHours = project.id <= 5 ? 5.83 : null;
+        
+        return {
+          ...project,
+          dailyGeneration: dailyGeneration,
+          efficiencyHours: efficiencyHours,
+          avgEfficiencyHours: avgEfficiencyHours,
+          efficiencyColor: efficiencyColor,
+          isSimulated: true
+        };
+      });
       
-      console.log(`找到 ${projectsWithScreenshots.length} 个项目的爬虫截图`);
+      filteredData = [...energyProjectData];
+      renderTableData();
       
-      // 根据是否有爬虫数据决定使用哪种方式初始化数据
-      if (projectsWithScreenshots.length > 0) {
-        // 有爬虫数据，使用这些项目的数据
-        loadDashboardWithCrawlerData();
-      } else {
-        // 没有爬虫数据，使用默认的占位数据
-        loadDashboardWithDefaultData();
-      }
+      console.log('模拟数据加载完成');
+      debugLog('使用模拟数据填充仪表盘');
     }
     
     // 从JSON文件加载太阳能数据
@@ -532,6 +1159,25 @@
           reject(new Error('加载JSON数据时发生网络错误'));
         };
         
+        xhr.send();
+      });
+    }
+
+    // 新增：按选定日期加载数据
+    async function loadSolarDataByDate(dateStr) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `data/solar_data_${dateStr}.json?t=` + new Date().getTime(), true);
+        xhr.responseType = 'json';
+        xhr.onload = function() {
+          if (xhr.status === 200 && xhr.response) {
+            // 返回完整响应对象，由 updateDashboardData 负责解析结构
+            resolve(xhr.response);
+          } else {
+            reject(new Error('未找到选中日期的数据文件'));
+          }
+        };
+        xhr.onerror = function() { reject(new Error('加载选中日期的数据时发生网络错误')); };
         xhr.send();
       });
     }
@@ -606,22 +1252,32 @@
     
     // 使用从JSON加载的实际数据更新仪表盘
     function updateDashboardData(jsonData) {
-      debugLog('接收到的JSON数据数组: ' + JSON.stringify(jsonData));
+      debugLog('接收到的JSON数据: ' + JSON.stringify(jsonData).substring(0, 100) + '...');
       
-      // 确保JSON数据格式正确
-      if (jsonData && jsonData.data && Array.isArray(jsonData.data)) {
-        // 如果JSON数据有嵌套的data字段，使用它
-        jsonData = jsonData.data;
+      // 检查JSON数据格式并提取项目数据
+      let projectDataArray = [];
+      
+      if (jsonData && jsonData.generation_data && jsonData.generation_data.data && Array.isArray(jsonData.generation_data.data)) {
+        // 处理新格式的JSON数据（包含date、generation_data和weather_data）
+        projectDataArray = jsonData.generation_data.data;
+        debugLog(`从JSON数据中提取到 ${projectDataArray.length} 个项目`);
+      } else if (jsonData && jsonData.data && Array.isArray(jsonData.data)) {
+        // 处理嵌套data字段的JSON数据
+        projectDataArray = jsonData.data;
+      } else if (Array.isArray(jsonData)) {
+        // 处理直接是项目数据数组的JSON数据
+        projectDataArray = jsonData;
       }
       
-      // 确保jsonData是数组
-      if (!Array.isArray(jsonData)) {
-        console.error('JSON数据格式不正确，不是数组:', jsonData);
+      // 确保有项目数据
+      if (!Array.isArray(projectDataArray) || projectDataArray.length === 0) {
+        console.error('JSON数据格式不正确或不包含项目数据:', jsonData);
+        debugLog('JSON数据格式不正确，无法提取项目数据');
         return;
       }
       
       // 创建包含实际数据的项目数组
-      energyProjectData = jsonData.map(projectData => {
+      energyProjectData = projectDataArray.map(projectData => {
         console.log('处理项目数据:', projectData.id, projectData.name, 'dailyGeneration:', projectData.dailyGeneration);
         
         // 确保使用JSON数据中的dailyGeneration值，即使为0
@@ -641,6 +1297,9 @@
         let efficiencyHours = 0;
         if (dcCapacity && dailyGeneration) {
           efficiencyHours = parseFloat((dailyGeneration / dcCapacity / 1000).toFixed(2));
+        } else if (projectData.efficiencyHours !== undefined) {
+          // 如果JSON中直接提供了效率小时数，则使用它
+          efficiencyHours = parseFloat(projectData.efficiencyHours);
         }
         
         // 使用JSON数据中提供的效率颜色，如果没有则计算
@@ -667,7 +1326,7 @@
           efficiencyHours: efficiencyHours,
           efficiencyColor: efficiencyColor,
           avgEfficiencyHours: avgEfficiencyHours,
-          date: projectData.date || new Date().toISOString().split('T')[0],
+          date: projectData.date || (jsonData.date || new Date().toISOString().split('T')[0]),
           isSimulated: false, // 标记为真实数据
           power_curve: projectData.power_curve || { data_points: [] }
         };
@@ -691,6 +1350,9 @@
         lastUpdateElem.textContent = new Date().toLocaleString();
       }
       
+      // 更新天气显示为选中日期的保存数据
+      updateWeatherFromSaved(jsonData);
+      
       // 显示数据更新通知
       showDataUpdateNotification();
     }
@@ -699,6 +1361,9 @@
     // 使用更新后的数据渲染表格
     function renderTableDataWithUpdatedData(projects, totalGen) {
       const dataTableBody = document.getElementById('data-table-body');
+      const dataTable = document.getElementById('data-table');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      
       if (!dataTableBody) {
         console.error('找不到数据表格体');
         return;
@@ -711,45 +1376,126 @@
         // 显示空数据状态
         const emptyRow = document.createElement('tr');
         emptyRow.innerHTML = `
-          <td colspan="7" class="px-4 py-8 text-center text-gray-500">暂无数据</td>
+          <td colspan="7" class="px-6 py-12 text-center text-gray-500 bg-gray-50 rounded-lg">
+            <div class="flex flex-col items-center justify-center">
+              <i class="fa fa-bar-chart text-gray-300 text-4xl mb-4"></i>
+              <p class="text-lg font-medium">暂无数据</p>
+              <p class="text-sm text-gray-400 mt-2">请稍后刷新页面或联系系统管理员</p>
+            </div>
+          </td>
         `;
         dataTableBody.appendChild(emptyRow);
+        
+        // 显示表格，隐藏加载指示器
+        if (dataTable && loadingIndicator) {
+          dataTable.classList.remove('hidden');
+          loadingIndicator.classList.add('hidden');
+        }
       } else {
+        // 显示表格，隐藏加载指示器
+        if (dataTable && loadingIndicator) {
+          dataTable.classList.remove('hidden');
+          loadingIndicator.classList.add('hidden');
+        }
         // 计算所有六个项目的等效利用小时平均值
         const totalEfficiencyHours = projects.reduce((sum, project) => sum + parseFloat(project.efficiencyHours || 0), 0);
         const avgEfficiencyHours = (totalEfficiencyHours / projects.length).toFixed(2);
+        
+        // 计算前五个项目的平均利用小时
+        const firstFiveProjects = projects.slice(0, 5);
+        const firstFiveAvgHoursValue = parseFloat(firstFiveProjects.reduce((sum, project) => sum + parseFloat(project.efficiencyHours || 0), 0) / firstFiveProjects.length);
+        const firstFiveAvgHours = firstFiveAvgHoursValue.toFixed(2);
+        
+        // 计算百分比阈值
+        const fivePercentAbove = firstFiveAvgHoursValue * 1.05;
+        const tenPercentAbove = firstFiveAvgHoursValue * 1.10;
+        const fivePercentBelow = firstFiveAvgHoursValue * 0.95;
+        const tenPercentBelow = firstFiveAvgHoursValue * 0.90;
+        const fifteenPercentBelow = firstFiveAvgHoursValue * 0.85;
         
         // 添加数据行
         projects.forEach((project, index) => {
           console.log(`渲染项目数据 - ID:${project.id}, 名称:${project.name}, 日发电量:${project.dailyGeneration}`);
           
           const row = document.createElement('tr');
-          row.className = 'hover:bg-gray-50 transition-colors';
+          row.className = 'bg-white'; // 简化表格样式，移除所有悬停动画
           
           // 移除特殊样式，所有项目使用统一字体
           const dailyGenerationClass = '';
           
-          // 检查是否是第一个项目
+          // 确定等效利用小时的填充色
+          let efficiencyColorClass = '';
+          const projectEfficiency = parseFloat(project.efficiencyHours || 0);
+          
+          // id6项目（第六个项目）的等效利用小时表格填充色为白色
+          if (index === 5) {
+            efficiencyColorClass = 'bg-white text-gray-800';
+          } 
+          // 其他五个项目的等效利用小时的表格填充色逻辑
+          else if (index < 5) {
+            // 添加调试日志以查看实际数值
+            console.log(`阈值计算 - 平均利用小时值: ${firstFiveAvgHoursValue}, 等效利用小时: ${projectEfficiency}`);
+            console.log(`阈值: 5%以上=${fivePercentAbove.toFixed(4)}, 10%以上=${tenPercentAbove.toFixed(4)}, 5%以下=${fivePercentBelow.toFixed(4)}, 10%以下=${tenPercentBelow.toFixed(4)}, 15%以下=${fifteenPercentBelow.toFixed(4)}`);
+            
+            if (projectEfficiency >= tenPercentAbove) {
+              // 超过五个项目平均利用小时10%以上
+              efficiencyColorClass = 'bg-[#00B050] text-white'; // 绿色
+              console.log('分类: 超过10%以上 - 绿色');
+            } else if (projectEfficiency >= firstFiveAvgHoursValue) {
+              // 超过五个项目平均利用小时0-10%
+              efficiencyColorClass = 'bg-[#92D050] text-white'; // 浅绿色
+              console.log('分类: 超过0-10% - 浅绿色');
+            } else if (projectEfficiency >= fivePercentBelow) {
+              // 低于五个项目平均利用小时0-5%
+              efficiencyColorClass = 'bg-[#FFFF00] text-gray-800'; // 黄色
+              console.log('分类: 低于0-5% - 黄色');
+            } else if (projectEfficiency >= tenPercentBelow) {
+              // 低于五个项目平均利用小时5-10%
+              efficiencyColorClass = 'bg-[#FFC000] text-white'; // 橙色
+              console.log('分类: 低于5-10% - 橙色');
+            } else if (projectEfficiency >= fifteenPercentBelow) {
+              // 低于五个项目平均利用小时10-15%
+              efficiencyColorClass = 'bg-[#FFC000] text-white'; // 橙色
+              console.log('分类: 低于10-15% - 橙色');
+            } else {
+              // 低于五个项目平均利用小时15%以上
+              efficiencyColorClass = 'bg-[#FF3B3B] text-white'; // 红色
+              console.log('分类: 低于15%以上 - 红色');
+            }
+          }
+          
+          // 检查是否是第一个项目（零碳商业园）
           if (index === 0) {
-            // 第一个项目显示合并的单元格和平均值
+            // 第一个项目，显示合并的单元格（合并前五个项目的平均利用小时）
             row.innerHTML = `
-              <td class="px-4 py-3 border border-gray-300 text-sm">${project.name}</td>
-              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.dcCapacity.toFixed(4)}</td>
-              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.acCapacity.toFixed(2)}</td>
-              <td class="px-4 py-3 border border-gray-300 text-sm text-right ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
-              <td class="px-4 py-3 border border-gray-300">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
-              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium text-white ${project.efficiencyColor}">${project.efficiencyHours.toFixed(2)}</td>
-              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium" rowspan="6">${avgEfficiencyHours}</td>
+              <td class="px-6 py-4 text-sm font-medium text-dark border-b border-gray-100 bg-white">${project.name}</td>
+              <td class="px-6 py-4 text-sm text-right border-b border-gray-100 bg-white">${project.dcCapacity.toFixed(5)}</td>
+              <td class="px-6 py-4 text-sm text-right border-b border-gray-100 bg-white">${project.id === 6 ? '/' : project.acCapacity.toFixed(2)}</td>
+              <td class="px-6 py-4 text-sm text-right font-medium border-b border-gray-100 bg-white ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
+              <td class="px-6 py-4 border-b border-gray-100 bg-white">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
+              <td class="px-6 py-4 text-center text-sm font-bold ${efficiencyColorClass}">${project.efficiencyHours.toFixed(2)}</td>
+              <td class="px-6 py-4 text-center text-sm font-bold bg-white text-gray-800 rounded-lg" rowspan="5">${firstFiveAvgHours}</td>
+            `;
+          } else if (index < 5) {
+            // id2-id5项目，不显示最后一列（因为被第一个项目合并了）
+            row.innerHTML = `
+              <td class="px-6 py-4 text-sm font-medium text-dark border-b border-gray-100 bg-white">${project.name}</td>
+              <td class="px-6 py-4 text-sm text-right border-b border-gray-100 bg-white">${project.dcCapacity.toFixed(5)}</td>
+              <td class="px-6 py-4 text-sm text-right border-b border-gray-100 bg-white">${project.id === 6 ? '/' : project.acCapacity.toFixed(2)}</td>
+              <td class="px-6 py-4 text-sm text-right font-medium border-b border-gray-100 bg-white ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
+              <td class="px-6 py-4 border-b border-gray-100 bg-white">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
+              <td class="px-6 py-4 text-center text-sm font-bold ${efficiencyColorClass}">${project.efficiencyHours.toFixed(2)}</td>
             `;
           } else {
-            // 其他五个项目不显示最后一列
+            // 第六个及以后的项目，单独显示平均利用小时
             row.innerHTML = `
-              <td class="px-4 py-3 border border-gray-300 text-sm">${project.name}</td>
-              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.dcCapacity.toFixed(4)}</td>
-              <td class="px-4 py-3 border border-gray-300 text-sm text-right">${project.acCapacity.toFixed(2)}</td>
-              <td class="px-4 py-3 border border-gray-300 text-sm text-right ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
-              <td class="px-4 py-3 border border-gray-300">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
-              <td class="px-4 py-3 border border-gray-300 text-center text-sm font-medium text-white ${project.efficiencyColor}">${project.efficiencyHours.toFixed(2)}</td>
+              <td class="px-6 py-4 text-sm font-medium text-dark border-b border-gray-100 bg-white">${project.name}</td>
+              <td class="px-6 py-4 text-sm text-right border-b border-gray-100 bg-white">${project.dcCapacity.toFixed(5)}</td>
+              <td class="px-6 py-4 text-sm text-right border-b border-gray-100 bg-white">${project.id === 6 ? '/' : project.acCapacity.toFixed(2)}</td>
+              <td class="px-6 py-4 text-sm text-right font-medium border-b border-gray-100 bg-white ${dailyGenerationClass}">${project.dailyGeneration.toFixed(2)}</td>
+              <td class="px-6 py-4 border-b border-gray-100 bg-white">${project.id === 5 ? enhancedGeneratePowerCurveSVG(project.id) : generatePowerCurveSVG(project.id)}</td>
+              <td class="px-6 py-4 text-center text-sm font-bold ${efficiencyColorClass}">${project.efficiencyHours.toFixed(2)}</td>
+              <td class="px-6 py-4 text-center text-sm font-medium bg-white text-gray-800 rounded-lg">${project.avgEfficiencyHours ? project.avgEfficiencyHours.toFixed(2) : '-'}</td>
             `;
           }
           
@@ -758,15 +1504,15 @@
         
         // 添加总计行
         const totalRow = document.createElement('tr');
-        totalRow.className = 'bg-gray-50';
+        totalRow.className = 'bg-gradient-to-r from-solar-50 to-blue-50';
         totalRow.innerHTML = `
-          <td class="px-4 py-3 border border-gray-300 text-sm font-medium">本日合计发电量</td>
-          <td class="px-4 py-3 border border-gray-300"></td>
-          <td class="px-4 py-3 border border-gray-300"></td>
-          <td class="px-4 py-3 border border-gray-300 text-sm text-right font-medium">${totalGen.toFixed(2)}</td>
-          <td class="px-4 py-3 border border-gray-300"></td>
-          <td class="px-4 py-3 border border-gray-300"></td>
-          <td class="px-4 py-3 border border-gray-300"></td>
+          <td class="px-6 py-4 text-sm font-bold text-dark border-b border-solar-100">本日合计发电量</td>
+          <td class="px-6 py-4 bg-white border-b border-solar-100"></td>
+          <td class="px-6 py-4 bg-white border-b border-solar-100"></td>
+          <td class="px-6 py-4 text-sm text-right font-bold text-primary bg-white border-b border-solar-100">${totalGen.toFixed(2)}</td>
+          <td class="px-6 py-4 bg-white border-b border-solar-100"></td>
+          <td class="px-6 py-4 bg-white border-b border-solar-100"></td>
+          <td class="px-6 py-4 bg-white border-b border-solar-100"></td>
         `;
         
         dataTableBody.appendChild(totalRow);
@@ -789,6 +1535,32 @@
       }
     }
     
+    // 添加历史数据按钮点击处理功能
+    function setupHistoryDataButton() {
+      // 查找历史数据标题元素
+      const historyTitle = document.querySelector('div.date-navigation h3');
+      if (historyTitle) {
+        // 为历史数据标题添加点击效果和提示
+        historyTitle.classList.add('cursor-pointer', 'hover:text-blue-600', 'transition-colors');
+        historyTitle.title = '点击查看可用的历史数据';
+        
+        // 添加点击事件处理
+        historyTitle.addEventListener('click', function() {
+          // 检查reports目录下是否有历史数据文件
+          // 注意：由于安全限制，浏览器不能直接读取服务器文件系统
+          // 这里我们模拟一个简单的历史数据查看功能
+          alert('历史数据功能：系统会显示不同日期的发电数据报告\n\n当前可用的历史数据：\n- 2025年09月27日\n\n您可以在浏览器中访问：http://localhost:8000/reports/2025-09-27.html\n\n系统将在后续优化中提供更便捷的历史数据浏览体验。');
+          
+          // 可选：直接跳转到最新的历史数据文件
+          // window.location.href = '/reports/2025-09-27.html';
+        });
+        
+        console.log('历史数据按钮点击功能已设置');
+      } else {
+        console.log('未找到历史数据标题元素');
+      }
+    }
+
     // 页面加载时检查登录状态
     document.addEventListener('DOMContentLoaded', function() {
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -809,10 +1581,239 @@
           // 如果获取失败，使用默认占位数据
           loadDashboardWithDefaultData();
         });
+        
+        // 设置历史数据按钮功能
+        setupHistoryDataButton();
+        
+        // 设置月份导航功能
+        setupMonthNavigation();
+        
+        // 设置刷新按钮点击事件
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', function() {
+            console.log('刷新数据...');
+            
+            // 显示加载指示器
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const dataTable = document.getElementById('data-table');
+            if (loadingIndicator && dataTable) {
+              loadingIndicator.classList.remove('hidden');
+              dataTable.classList.add('hidden');
+            }
+            
+            // 添加旋转动画
+            this.classList.add('animate-spin');
+            
+            // 重新加载数据
+            checkAndLoadCrawlerData().catch(error => {
+              console.error('刷新数据失败:', error);
+              loadDashboardWithDefaultData();
+            }).finally(() => {
+              // 移除旋转动画
+              this.classList.remove('animate-spin');
+              
+              // 更新最后更新时间
+              if (lastUpdateElem) {
+                lastUpdateElem.textContent = new Date().toLocaleString();
+              }
+            });
+          });
+        }
       }
       
       // 移除了爬虫模拟器初始化，因为我们现在使用真实的爬虫数据
     });
+    
+    // 设置月份导航功能
+    function setupMonthNavigation() {
+      const currentMonthElem = document.getElementById('current-month');
+      const prevMonthBtn = document.getElementById('prev-month-btn');
+      const nextMonthBtn = document.getElementById('next-month-btn');
+      const dateButtonsContainer = document.getElementById('date-buttons-container');
+      
+      if (!currentMonthElem || !prevMonthBtn || !nextMonthBtn || !dateButtonsContainer) {
+        console.log('月份导航元素不存在');
+        return;
+      }
+      
+      // 当前显示的月份
+      let currentDate = new Date();
+      let currentYear = currentDate.getFullYear();
+      let currentMonth = currentDate.getMonth();
+      
+      // 更新月份显示
+      function updateMonthDisplay() {
+        const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        currentMonthElem.textContent = `${currentYear}年${monthNames[currentMonth]}`;
+        
+        // 生成日期按钮
+        generateDateButtons();
+      }
+      
+      // 生成日期按钮
+      function generateDateButtons() {
+        dateButtonsContainer.innerHTML = '';
+        
+        // 获取当前月份的天数
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        
+        // 生成每一天的按钮
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateButton = document.createElement('button');
+          dateButton.className = 'px-3 py-1.5 rounded-lg text-sm hover:bg-primary/10 text-primary transition-colors duration-300';
+          dateButton.textContent = `${day}日`;
+          
+          // 检查是否是今天或当前选中的日期
+          if (currentYear === currentDate.getFullYear() && currentMonth === currentDate.getMonth() && day === currentDate.getDate()) {
+            dateButton.className = 'px-3 py-1.5 rounded-lg text-sm bg-primary text-white font-medium';
+          }
+          
+          // 添加点击事件
+          dateButton.addEventListener('click', function() {
+            console.log(`选择日期: ${currentYear}年${currentMonth + 1}月${day}日`);
+            
+            // 更新所有按钮的样式
+            const allButtons = dateButtonsContainer.querySelectorAll('button');
+            allButtons.forEach(btn => {
+              btn.className = 'px-3 py-1.5 rounded-lg text-sm hover:bg-primary/10 text-primary transition-colors duration-300';
+            });
+            
+            // 设置当前按钮的样式
+            this.className = 'px-3 py-1.5 rounded-lg text-sm bg-primary text-white font-medium';
+            
+            // 更新报表日期
+            const reportDateElem = document.getElementById('report-date');
+            if (reportDateElem) {
+              reportDateElem.textContent = `${currentYear}年${currentMonth + 1}月${day}日`;
+            }
+            
+            // 显示加载指示器
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const dataTable = document.getElementById('data-table');
+            if (loadingIndicator && dataTable) {
+              loadingIndicator.classList.remove('hidden');
+              dataTable.classList.add('hidden');
+            }
+            
+            // 新增：根据选中日期加载对应数据文件，并刷新表格与截图
+            const selectedDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            window.currentSelectedDateStr = selectedDateStr;
+            window.enforceSelectedDateScreenshot = true;
+            loadSolarDataByDate(selectedDateStr).then(jsonObj => {
+              // 使用统一的更新管线，确保容量、效率颜色等字段完整
+              updateDashboardData(jsonObj);
+              
+              // 触发图片重新加载：重新执行当前图片的回退逻辑以切换到选定日期的截图
+              document.querySelectorAll('.power-curve-image').forEach(img => {
+                const parent = img.closest('.power-curve-container');
+                const pidAttr = parent ? parent.getAttribute('data-project-id') : null;
+                const pid = pidAttr ? parseInt(pidAttr, 10) : null;
+                if (pid) {
+                  loadFallbackImage(img, pid);
+                }
+              });
+            }).catch(() => {
+              console.warn('未找到该日期的数据文件，显示暂无数据');
+              // 清空并渲染“暂无数据”状态行
+              renderTableDataWithUpdatedData([], 0);
+
+              // 设置天气为空态
+              const weatherInfoElem = document.getElementById('weather-info');
+              if (weatherInfoElem) {
+                weatherInfoElem.textContent = '暂无数据';
+              }
+              
+              // 同时隐藏所有已存在的曲线图片并显示占位（若容器仍在）
+              document.querySelectorAll('.power-curve-container').forEach(container => {
+                container.querySelectorAll('img.power-curve-image').forEach(img => {
+                  img.style.display = 'none';
+                });
+                let placeholder = container.querySelector('.no-data-placeholder');
+                if (!placeholder) {
+                  placeholder = document.createElement('div');
+                  placeholder.className = 'no-data-placeholder text-gray-400 text-center text-sm py-4';
+                  placeholder.textContent = '暂无数据';
+                  container.appendChild(placeholder);
+                }
+                placeholder.style.display = 'block';
+              });
+            }).finally(() => {
+              // 隐藏加载指示器并显示数据表
+              if (loadingIndicator && dataTable) {
+                loadingIndicator.classList.add('hidden');
+                dataTable.classList.remove('hidden');
+              }
+              // 显示更新通知
+              showDataUpdateNotification();
+            });
+          });
+          
+          dateButtonsContainer.appendChild(dateButton);
+        }
+      }
+      
+      // 上一个月
+      prevMonthBtn.addEventListener('click', function() {
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        updateMonthDisplay();
+        
+        // 模拟数据加载
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const dataTable = document.getElementById('data-table');
+        if (loadingIndicator && dataTable) {
+          loadingIndicator.classList.remove('hidden');
+          dataTable.classList.add('hidden');
+        }
+        
+        // 模拟加载延迟
+        setTimeout(() => {
+          if (loadingIndicator && dataTable) {
+            loadingIndicator.classList.add('hidden');
+            dataTable.classList.remove('hidden');
+          }
+          
+          // 显示更新通知
+          showDataUpdateNotification();
+        }, 800);
+      });
+      
+      // 下一个月
+      nextMonthBtn.addEventListener('click', function() {
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        updateMonthDisplay();
+        
+        // 模拟数据加载
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const dataTable = document.getElementById('data-table');
+        if (loadingIndicator && dataTable) {
+          loadingIndicator.classList.remove('hidden');
+          dataTable.classList.add('hidden');
+        }
+        
+        // 模拟加载延迟
+        setTimeout(() => {
+          if (loadingIndicator && dataTable) {
+            loadingIndicator.classList.add('hidden');
+            dataTable.classList.remove('hidden');
+          }
+          
+          // 显示更新通知
+          showDataUpdateNotification();
+        }, 800);
+      });
+      
+      // 初始化显示
+      updateMonthDisplay();
+    }
   </script>
 </body>
 </html>

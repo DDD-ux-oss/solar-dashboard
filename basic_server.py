@@ -5,7 +5,7 @@ import http.server
 import socketserver
 
 # 设置端口
-PORT = 3000
+PORT = 8081
 
 # 使用SimpleHTTPRequestHandler处理请求
 handler = http.server.SimpleHTTPRequestHandler
