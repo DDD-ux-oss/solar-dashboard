@@ -46,37 +46,76 @@ jobs:
       # 步骤4: 安装Python依赖
       - name: 安装Python依赖
         run: |
+          # 确保使用正确的Python路径
+          which python
+          python --version
+          which python3
+          python3 --version
+          
+          # 升级pip
           python -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip
+          
+          # 安装依赖包
           pip install -r requirements.txt
+          pip3 install -r requirements.txt
+          
           # 在CI环境中安装额外的浏览器驱动支持
           pip install webdriver-manager
+          pip3 install webdriver-manager
+          
           # 验证关键依赖是否安装成功
-          python -c "import requests; print('requests安装成功')"
-          python -c "import selenium; print('selenium安装成功')"
-          python -c "import easyocr; print('easyocr安装成功')"
-          # 显示Python和pip版本信息
-          python --version
-          pip --version
-          # 显示已安装的包列表
-          pip list
+          python -c "import requests; print('requests安装成功')" || echo "Python requests导入失败"
+          python3 -c "import requests; print('Python3 requests安装成功')" || echo "Python3 requests导入失败"
+          
+          python -c "import selenium; print('selenium安装成功')" || echo "Python selenium导入失败"
+          python3 -c "import selenium; print('Python3 selenium安装成功')" || echo "Python3 selenium导入失败"
+          
+          python -c "import easyocr; print('easyocr安装成功')" || echo "Python easyocr导入失败"
+          python3 -c "import easyocr; print('Python3 easyocr安装成功')" || echo "Python3 easyocr导入失败"
+          
+          # 显示pip版本信息和已安装的包列表
+          pip --version || echo "pip命令失败"
+          pip3 --version || echo "pip3命令失败"
+          pip list || echo "pip list失败"
+          pip3 list || echo "pip3 list失败"
           
       # 步骤5: 运行爬虫脚本
-      - name: 运行太阳能数据爬虫
-        env:
-          # 从GitHub Secrets中获取敏感信息
-          HUAWEI_USERNAME: ${{ secrets.HUAWEI_USERNAME }}
-          HUAWEI_PASSWORD: ${{ secrets.HUAWEI_PASSWORD }}
-          SEMS_USERNAME: ${{ secrets.SEMS_USERNAME }}
-          SEMS_PASSWORD: ${{ secrets.SEMS_PASSWORD }}
-          ESOLAR_USERNAME: ${{ secrets.ESOLAR_USERNAME }}
-          ESOLAR_PASSWORD: ${{ secrets.ESOLAR_PASSWORD }}
-        run: |
-          # 设置显示环境，用于Chrome运行
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          
-          # 运行爬虫脚本
-          python update_solar_dashboard.py
+        - name: 运行太阳能数据爬虫
+          env:
+            # 从GitHub Secrets中获取敏感信息
+            HUAWEI_USERNAME: ${{ secrets.HUAWEI_USERNAME }}
+            HUAWEI_PASSWORD: ${{ secrets.HUAWEI_PASSWORD }}
+            SEMS_USERNAME: ${{ secrets.SEMS_USERNAME }}
+            SEMS_PASSWORD: ${{ secrets.SEMS_PASSWORD }}
+            ESOLAR_USERNAME: ${{ secrets.ESOLAR_USERNAME }}
+            ESOLAR_PASSWORD: ${{ secrets.ESOLAR_PASSWORD }}
+          run: |
+            # 设置显示环境，用于Chrome运行
+            export DISPLAY=:99
+            Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+            
+            # 检查Python环境和依赖
+            echo "=== 检查Python环境 ==="
+            which python
+            python --version
+            python -c "import sys; print('Python路径:', sys.executable)"
+            python -c "import requests; print('requests模块可用')" || echo "ERROR: requests模块不可用"
+            
+            which python3
+            python3 --version
+            python3 -c "import sys; print('Python3路径:', sys.executable)"
+            python3 -c "import requests; print('Python3 requests模块可用')" || echo "ERROR: Python3 requests模块不可用"
+            
+            echo "=== 运行爬虫脚本 ==="
+            # 尝试使用python3运行脚本
+            python3 update_solar_dashboard.py || {
+              echo "Python3运行失败，尝试使用python运行"
+              python update_solar_dashboard.py || {
+                echo "ERROR: 脚本运行失败"
+                exit 1
+              }
+            }
           
       # 步骤6: 检查数据是否更新
       - name: 检查数据更新
