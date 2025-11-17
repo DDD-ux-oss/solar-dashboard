@@ -111,7 +111,8 @@ jobs:
 
           if ! git diff --staged --quiet; then
             git commit -m "自动化更新太阳能数据 $(date +'%Y-%m-%d %H:%M:%S')"
-            git push origin main
+            # 使用 GITHUB_TOKEN 推送
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
             echo "数据已成功更新并推送到仓库"
           else
             echo "没有检测到数据更改，跳过提交"
