@@ -9,13 +9,17 @@ import sys
 import io
 from PIL import Image
 from selenium import webdriver
-from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 import urllib3
 
 # 禁用SSL验证警告
@@ -25,6 +29,15 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+def is_ci_environment():
+    """检测是否在CI环境中运行"""
+    return (
+        os.getenv('CI') == 'true' or 
+        os.getenv('GITHUB_ACTIONS') == 'true' or
+        os.getenv('CONTINUOUS_INTEGRATION') == 'true' or
+        os.getenv('RUNNER_DEBUG') is not None
+    )
 
 class HuaweiFusionSolarScraper:
     def __init__(self, username, password, projects, screenshots_dir='screenshots', headless=False, retry_attempts=3):
@@ -40,47 +53,75 @@ class HuaweiFusionSolarScraper:
         # 确保截图目录存在
         os.makedirs(self.screenshots_dir, exist_ok=True)
         
-        # 配置Edge选项
-        self.edge_options = Options()
+        # 检测CI环境
+        ci_env = is_ci_environment()
         
-        # 禁用自动化控制特征
-        self.edge_options.add_argument('--disable-blink-features=AutomationControlled')
+        # 根据环境选择浏览器类型
+        self.browser_type = 'chrome' if ci_env else 'edge'
+        logger.info(f"检测到{'CI' if ci_env else '本地'}环境，将使用{self.browser_type}浏览器")
         
-        # 添加实验选项
-        self.edge_options.add_experimental_option('excludeSwitches', ['enable-automation'])
-        self.edge_options.add_experimental_option('useAutomationExtension', False)
-        
-        # 无头模式配置
-        if self.headless:
-            logger.info("启用无头模式")
-            self.edge_options.add_argument('--headless')
-            # 无头模式下需要额外的窗口尺寸设置
-            self.edge_options.add_argument('--window-size=1920,1080')
-        
-        # 基本配置
-        self.edge_options.add_argument('--disable-gpu')
-        self.edge_options.add_argument('--no-sandbox')
-        self.edge_options.add_argument('--disable-dev-shm-usage')
-        self.edge_options.add_argument('--window-size=1920,1080')
-        
-        # SSL相关配置
-        self.edge_options.add_argument('--ignore-certificate-errors')
-        self.edge_options.add_argument('--allow-insecure-localhost')
-        self.edge_options.add_argument('--ssl-protocol=any')
-        self.edge_options.add_argument('--disable-web-security')
-        
-        # 在CI环境中运行的配置
-        # 只在明确指定headless=True或CI环境中启用无头模式
-        if self.headless:
-            logger.info("在CI环境中启用无头模式")
-            self.edge_options.add_argument('--headless')
+        # 配置浏览器选项
+        if self.browser_type == 'chrome':
+            self.chrome_options = ChromeOptions()
+            
+            # CI环境配置
+            if ci_env or self.headless:
+                logger.info("启用无头模式")
+                self.chrome_options.add_argument('--headless')
+                self.chrome_options.add_argument('--no-sandbox')
+                self.chrome_options.add_argument('--disable-dev-shm-usage')
+                self.chrome_options.add_argument('--disable-gpu')
+                self.chrome_options.add_argument('--remote-debugging-port=9222')
+            
+            # 基本配置
+            self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            self.chrome_options.add_argument('--disable-extensions')
+            self.chrome_options.add_argument('--disable-notifications')
+            self.chrome_options.add_argument('--window-size=1920,1080')
+            
+            # SSL相关配置
+            self.chrome_options.add_argument('--ignore-certificate-errors')
+            self.chrome_options.add_argument('--allow-insecure-localhost')
+            self.chrome_options.add_argument('--ssl-protocol=any')
+            self.chrome_options.add_argument('--disable-web-security')
+            
+            # 用户代理
+            self.chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
+            
+            # 实验性选项
+            self.chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+            self.chrome_options.add_experimental_option('useAutomationExtension', False)
+            
+        else:  # Edge
+            self.edge_options = EdgeOptions()
+            
+            # 无头模式配置
+            if self.headless:
+                logger.info("启用无头模式")
+                self.edge_options.add_argument('--headless')
+                self.edge_options.add_argument('--window-size=1920,1080')
+            
+            # 基本配置
+            self.edge_options.add_argument('--disable-gpu')
             self.edge_options.add_argument('--no-sandbox')
             self.edge_options.add_argument('--disable-dev-shm-usage')
-        else:
-            logger.info("在本地环境中运行，显示浏览器界面")
-        
-        # 增加用户代理，使用与当前浏览器匹配的UA
-        self.edge_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0')
+            self.edge_options.add_argument('--window-size=1920,1080')
+            
+            # SSL相关配置
+            self.edge_options.add_argument('--ignore-certificate-errors')
+            self.edge_options.add_argument('--allow-insecure-localhost')
+            self.edge_options.add_argument('--ssl-protocol=any')
+            self.edge_options.add_argument('--disable-web-security')
+            
+            # 禁用自动化控制特征
+            self.edge_options.add_argument('--disable-blink-features=AutomationControlled')
+            
+            # 增加用户代理，使用与当前浏览器匹配的UA
+            self.edge_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0')
+            
+            # 实验性选项
+            self.edge_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+            self.edge_options.add_experimental_option('useAutomationExtension', False)
         
         # 配置日志
         self.setup_logging()
@@ -122,31 +163,57 @@ class HuaweiFusionSolarScraper:
                 attempt += 1
                 logger.info(f"第 {attempt}/{max_attempts} 次尝试启动浏览器...")
                 
-                # 尝试使用本地的msedgedriver.exe，但在不存在时回退到系统PATH中的驱动
-                driver_path = os.path.join(os.getcwd(), 'msedgedriver.exe')
-                service = None
-                
-                # 检查驱动是否存在
-                if os.path.exists(driver_path):
-                    logger.info(f"使用Edge驱动路径: {driver_path}")
-                    # 创建服务对象并配置
-                    service = Service(
-                        driver_path,
-                        log_output=os.path.join(os.getcwd(), 'msedgedriver.log')  # 启用驱动日志
+                if self.browser_type == 'chrome':
+                    logger.info("初始化Chrome浏览器...")
+                    
+                    # 在CI环境中使用webdriver-manager自动管理ChromeDriver
+                    if is_ci_environment():
+                        logger.info("CI环境：使用webdriver-manager自动管理ChromeDriver")
+                        service = ChromeService(ChromeDriverManager().install())
+                    else:
+                        # 本地环境，尝试使用系统PATH中的ChromeDriver
+                        try:
+                            service = ChromeService()
+                            logger.info("使用系统PATH中的ChromeDriver")
+                        except Exception as e:
+                            logger.warning(f"系统PATH中的ChromeDriver不可用: {e}")
+                            logger.info("回退到webdriver-manager")
+                            service = ChromeService(ChromeDriverManager().install())
+                    
+                    # 初始化Chrome WebDriver
+                    self.driver = webdriver.Chrome(
+                        service=service,
+                        options=self.chrome_options
                     )
-                else:
-                    logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
-                    # 不指定驱动路径，让Selenium自动查找系统PATH中的驱动
-                    service = Service(log_output=os.path.join(os.getcwd(), 'msedgedriver.log'))
-                
-                # 设置服务日志级别
-                service.log_level = 'INFO'
-                
-                # 初始化WebDriver
-                self.driver = webdriver.Edge(
-                    service=service,
-                    options=self.edge_options
-                )
+                    
+                else:  # Edge
+                    logger.info("初始化Edge浏览器...")
+                    
+                    # 尝试使用本地的msedgedriver.exe，但在不存在时回退到系统PATH中的驱动
+                    driver_path = os.path.join(os.getcwd(), 'msedgedriver.exe')
+                    service = None
+                    
+                    # 检查驱动是否存在
+                    if os.path.exists(driver_path):
+                        logger.info(f"使用Edge驱动路径: {driver_path}")
+                        # 创建服务对象并配置
+                        service = EdgeService(
+                            driver_path,
+                            log_output=os.path.join(os.getcwd(), 'msedgedriver.log')  # 启用驱动日志
+                        )
+                    else:
+                        logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
+                        # 不指定驱动路径，让Selenium自动查找系统PATH中的驱动
+                        service = EdgeService(log_output=os.path.join(os.getcwd(), 'msedgedriver.log'))
+                    
+                    # 设置服务日志级别
+                    service.log_level = 'INFO'
+                    
+                    # 初始化WebDriver
+                    self.driver = webdriver.Edge(
+                        service=service,
+                        options=self.edge_options
+                    )
                 
                 # 设置页面加载超时
                 self.driver.set_page_load_timeout(60)
@@ -155,7 +222,7 @@ class HuaweiFusionSolarScraper:
                 # 设置隐式等待时间
                 self.driver.implicitly_wait(15)
                 
-                logger.info("Edge浏览器初始化成功")
+                logger.info(f"{self.browser_type}浏览器初始化成功")
                 
                 # 设置额外的执行环境
                 self.driver.execute_cdp_cmd(

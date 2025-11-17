@@ -13,14 +13,18 @@ import requests
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.service import Service
-from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (WebDriverException, TimeoutException,
                                       ElementNotInteractableException,
                                       NoSuchElementException,
                                       ElementClickInterceptedException)
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
 # 配置日志
 logging.basicConfig(
@@ -29,6 +33,11 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+def is_ci_environment():
+    """检测是否在CI环境中运行"""
+    ci_indicators = ['CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'TRAVIS', 'CIRCLECI', 'JENKINS_URL']
+    return any(os.environ.get(indicator) for indicator in ci_indicators)
 
 class SEMSScreenshotTool:
     def __init__(self, username, password, screenshots_dir=None, data_file_path=None):
@@ -60,8 +69,13 @@ class SEMSScreenshotTool:
         # 创建截图目录（如果不存在）
         os.makedirs(self.screenshots_dir, exist_ok=True)
         
+        # 检测CI环境并选择浏览器类型
+        self.browser_type = 'chrome' if is_ci_environment() else 'edge'
+        logger.info(f"运行环境检测: {'CI环境' if is_ci_environment() else '本地环境'}")
+        logger.info(f"选择浏览器类型: {self.browser_type}")
+        
         # 配置Edge浏览器选项
-        self.edge_options = Options()
+        self.edge_options = EdgeOptions()
         # 添加兼容性参数
         self.edge_options.add_argument('--disable-software-rasterizer')
         self.edge_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
@@ -100,6 +114,46 @@ class SEMSScreenshotTool:
         # 禁用自动化控制特征
         self.edge_options.add_argument('--disable-blink-features=AutomationControlled')
         
+        # 配置Chrome浏览器选项
+        self.chrome_options = ChromeOptions()
+        # 添加兼容性参数
+        self.chrome_options.add_argument('--disable-software-rasterizer')
+        self.chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
+        # 在CI环境中启用无头模式
+        if is_ci_environment():
+            self.chrome_options.add_argument('--headless=new')
+            self.chrome_options.add_argument('--disable-dev-shm-usage')
+            self.chrome_options.add_argument('--no-sandbox')
+            self.chrome_options.add_argument('--disable-gpu')
+        self.chrome_options.add_argument('--disable-site-isolation-trials')
+        self.chrome_options.add_argument('--no-sandbox')
+        self.chrome_options.add_argument('--disable-dev-shm-usage')
+        self.chrome_options.add_argument('--disable-gpu')
+        
+        # 设置用户代理
+        if system_ua:
+            self.chrome_options.add_argument(f'--user-agent={system_ua}')
+        else:
+            # 默认用户代理
+            self.chrome_options.add_argument('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        
+        # 实验性选项
+        self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.chrome_options.add_experimental_option('detach', False)
+        self.chrome_options.add_experimental_option('useAutomationExtension', False)
+        
+        # 设置下载路径（如需要）
+        chrome_prefs = {
+            "download.default_directory": self.screenshots_dir,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": True
+        }
+        self.chrome_options.add_experimental_option('prefs', chrome_prefs)
+        
+        # 禁用自动化控制特征
+        self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        
         # 项目容量映射（从solar_data.json获取的实际数据）
         self.project_capacities = {
             1: {'dcCapacity': 5.9826, 'acCapacity': 4.77},    # 梁才宋滩
@@ -122,19 +176,29 @@ class SEMSScreenshotTool:
     
     def _get_system_user_agent(self):
         """
-        尝试获取系统Edge浏览器的真实用户代理
+        尝试获取系统浏览器的真实用户代理
         :return: 用户代理字符串或None
         """
         try:
             # 临时启动一个浏览器实例来获取用户代理
-            temp_options = Options()
-            temp_options.add_argument('--headless=new')  # 使用无头模式
-            temp_options.add_argument('--disable-gpu')
-            temp_options.add_argument('--no-sandbox')
-            
-            temp_driver = webdriver.Edge(options=temp_options)
-            user_agent = temp_driver.execute_script("return navigator.userAgent;")
-            temp_driver.quit()
+            if self.browser_type == 'chrome':
+                temp_options = ChromeOptions()
+                temp_options.add_argument('--headless=new')  # 使用无头模式
+                temp_options.add_argument('--disable-gpu')
+                temp_options.add_argument('--no-sandbox')
+                
+                temp_driver = webdriver.Chrome(options=temp_options)
+                user_agent = temp_driver.execute_script("return navigator.userAgent;")
+                temp_driver.quit()
+            else:
+                temp_options = EdgeOptions()
+                temp_options.add_argument('--headless=new')  # 使用无头模式
+                temp_options.add_argument('--disable-gpu')
+                temp_options.add_argument('--no-sandbox')
+                
+                temp_driver = webdriver.Edge(options=temp_options)
+                user_agent = temp_driver.execute_script("return navigator.userAgent;")
+                temp_driver.quit()
             
             logger.info(f'成功获取系统用户代理: {user_agent}')
             return user_agent
@@ -143,32 +207,59 @@ class SEMSScreenshotTool:
             return None
     
     def __enter__(self):
-        """\上下文管理器入口，启动浏览器并设置网络请求拦截"""
+        """上下文管理器入口，启动浏览器并设置网络请求拦截"""
         # 初始化WebDriver实例
         max_attempts = 3
         for attempt in range(max_attempts):
             try:
-                # 检查驱动路径
-                driver_path = None
-                if os.path.exists(os.path.join(os.getcwd(), 'msedgedriver.exe')):
-                    driver_path = os.path.join(os.getcwd(), 'msedgedriver.exe')
-                    logger.info(f"使用本地Edge驱动: {driver_path}")
-                else:
-                    logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
-                
-                # 配置服务
-                self.driver_service = Service(
-                    executable_path=driver_path, 
-                    log_path=os.path.join(self.screenshots_dir, 'edge_driver.log'),
-                    log_level=logging.DEBUG
-                )
-                
-                # 启动浏览器
-                logger.info(f'尝试启动Edge浏览器 (第{attempt + 1}次)')
-                self.driver = webdriver.Edge(
-                    service=self.driver_service, 
-                    options=self.edge_options
-                )
+                if self.browser_type == 'chrome':
+                    logger.info("初始化Chrome浏览器...")
+                    
+                    # 在CI环境中使用webdriver-manager自动管理ChromeDriver
+                    if is_ci_environment():
+                        logger.info("CI环境：使用webdriver-manager自动管理ChromeDriver")
+                        service = ChromeService(ChromeDriverManager().install())
+                    else:
+                        # 本地环境，尝试使用系统PATH中的ChromeDriver
+                        try:
+                            service = ChromeService()
+                            logger.info("使用系统PATH中的ChromeDriver")
+                        except Exception as e:
+                            logger.warning(f"系统PATH中的ChromeDriver不可用: {e}")
+                            logger.info("回退到webdriver-manager")
+                            service = ChromeService(ChromeDriverManager().install())
+                    
+                    # 启动Chrome浏览器
+                    logger.info(f'尝试启动Chrome浏览器 (第{attempt + 1}次)')
+                    self.driver = webdriver.Chrome(
+                        service=service,
+                        options=self.chrome_options
+                    )
+                    
+                else:  # Edge
+                    logger.info("初始化Edge浏览器...")
+                    
+                    # 检查驱动路径
+                    driver_path = None
+                    if os.path.exists(os.path.join(os.getcwd(), 'msedgedriver.exe')):
+                        driver_path = os.path.join(os.getcwd(), 'msedgedriver.exe')
+                        logger.info(f"使用本地Edge驱动: {driver_path}")
+                    else:
+                        logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
+                    
+                    # 配置服务
+                    self.driver_service = EdgeService(
+                        executable_path=driver_path, 
+                        log_path=os.path.join(self.screenshots_dir, 'edge_driver.log'),
+                        log_level=logging.DEBUG
+                    )
+                    
+                    # 启动Edge浏览器
+                    logger.info(f'尝试启动Edge浏览器 (第{attempt + 1}次)')
+                    self.driver = webdriver.Edge(
+                        service=self.driver_service, 
+                        options=self.edge_options
+                    )
                 
                 # 设置隐式等待时间
                 self.driver.implicitly_wait(10)
@@ -200,7 +291,7 @@ class SEMSScreenshotTool:
                 except Exception as e:
                     logger.warning(f'无法扩展CDP命令集: {str(e)}')
                 
-                logger.info('Edge浏览器启动成功')
+                logger.info(f'{self.browser_type}浏览器启动成功')
                 return self
                 
             except WebDriverException as e:
@@ -211,7 +302,10 @@ class SEMSScreenshotTool:
                 if "session not created: unable to connect to renderer" in error_message:
                     logger.error('无法连接到渲染器。这通常是由于浏览器版本与驱动不匹配或系统资源不足导致的。')
                     # 尝试调整配置并继续
-                    self.edge_options.add_argument('--disable-software-rasterizer')
+                    if self.browser_type == 'chrome':
+                        self.chrome_options.add_argument('--disable-software-rasterizer')
+                    else:
+                        self.edge_options.add_argument('--disable-software-rasterizer')
                 
                 # 清理资源
                 if self.driver:

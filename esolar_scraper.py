@@ -7,8 +7,10 @@ import logging
 from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.service import Service
-from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
@@ -20,6 +22,8 @@ from selenium.common.exceptions import (
 import re
 import io
 import base64
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
 # 可选的OCR支持
 try:
@@ -46,6 +50,16 @@ def setup_logging():
 
 logger = setup_logging()
 
+def is_ci_environment():
+    """检测是否在CI环境中运行"""
+    return (
+        os.environ.get('CI') == 'true' or
+        os.environ.get('GITHUB_ACTIONS') == 'true' or
+        os.environ.get('CONTINUOUS_INTEGRATION') == 'true' or
+        os.environ.get('JENKINS_URL') is not None or
+        os.environ.get('CI_NAME') is not None
+    )
+
 class ESolarScraper:
     def __init__(self, username, password, screenshots_dir=None, data_file_path=None):
         self.username = username
@@ -67,66 +81,133 @@ class ESolarScraper:
         # 创建截图目录（如果不存在）
         os.makedirs(self.screenshots_dir, exist_ok=True)
         
-        # 配置Edge浏览器选项
-        self.edge_options = Options()
+        # 检测CI环境
+        ci_env = is_ci_environment()
         
-        # 添加兼容性和性能参数
-        self.edge_options.add_argument('--disable-software-rasterizer')
-        self.edge_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
-        self.edge_options.add_argument('--disable-site-isolation-trials')
-        self.edge_options.add_argument('--no-sandbox')
-        self.edge_options.add_argument('--disable-dev-shm-usage')
-        self.edge_options.add_argument('--disable-gpu')
-        # 添加无头模式配置，仅在CI环境中启用
-        # 为了方便本地调试，默认不启用无头模式
+        # 根据环境选择浏览器类型
+        self.browser_type = 'chrome' if ci_env else 'edge'
+        logger.info(f"检测到{'CI' if ci_env else '本地'}环境，将使用{self.browser_type}浏览器")
         
-        # 设置用户代理（使用正确格式，避免Edge打开多个错误页面）
-        self.edge_options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
-        )
-        
-        # 实验性选项
-        self.edge_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
-        self.edge_options.add_experimental_option('detach', False)
-        self.edge_options.add_experimental_option('useAutomationExtension', False)
-        
-        # 禁用自动化控制特征
-        self.edge_options.add_argument('--disable-blink-features=AutomationControlled')
-        
-        # 使用更宽松的浏览器设置以允许网站正常功能运行
-        self.edge_options.add_argument('--disable-extensions')
-        self.edge_options.add_argument('--disable-notifications')
-        self.edge_options.add_argument('--disable-features=TranslateUI')
-        
-        # 使用简化的内容安全策略，允许必要的资源加载
-        # 移除了严格的CSP限制，以避免阻止网站必要功能
-        
-        # 开启性能日志以捕获Network事件（Chromium驱动支持）
-        try:
-            self.edge_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
-        except Exception:
-            pass
-        
-        # 添加基本的首选项设置，保持简单
-        self.edge_options.add_experimental_option('prefs', {
-            'profile.default_content_setting_values': {
-                'images': 1,
-                'javascript': 1,
-                'plugins': 1,  # 允许必要的插件
-                'popups': 1,   # 允许必要的弹窗
-                'notifications': 2,  # 阻止通知
-            },
-            # 移除了过于严格的内容设置异常规则
-            'profile.managed_default_content_settings': {
-                'images': 1,
-                'javascript': 1,
-                'plugins': 1,
-                'popups': 1,
-                'notifications': 2
-            },
-            # 禁用站点隔离
-            'site-isolation-trial-opt-out': True
+        # 配置浏览器选项
+        if self.browser_type == 'chrome':
+            self.chrome_options = ChromeOptions()
+            
+            # CI环境配置
+            if ci_env:
+                logger.info("CI环境：启用无头模式")
+                self.chrome_options.add_argument('--headless')
+                self.chrome_options.add_argument('--no-sandbox')
+                self.chrome_options.add_argument('--disable-dev-shm-usage')
+                self.chrome_options.add_argument('--disable-gpu')
+                self.chrome_options.add_argument('--remote-debugging-port=9222')
+            
+            # 基本配置
+            self.chrome_options.add_argument('--disable-software-rasterizer')
+            self.chrome_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
+            self.chrome_options.add_argument('--disable-site-isolation-trials')
+            self.chrome_options.add_argument('--disable-extensions')
+            self.chrome_options.add_argument('--disable-notifications')
+            self.chrome_options.add_argument('--disable-features=TranslateUI')
+            self.chrome_options.add_argument('--window-size=1920,1080')
+            
+            # SSL相关配置
+            self.chrome_options.add_argument('--ignore-certificate-errors')
+            self.chrome_options.add_argument('--allow-insecure-localhost')
+            self.chrome_options.add_argument('--ssl-protocol=any')
+            self.chrome_options.add_argument('--disable-web-security')
+            
+            # 用户代理
+            self.chrome_options.add_argument(
+                "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            
+            # 实验性选项
+            self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
+            self.chrome_options.add_experimental_option('detach', False)
+            self.chrome_options.add_experimental_option('useAutomationExtension', False)
+            self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            
+            # 性能日志
+            try:
+                self.chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+            except Exception:
+                pass
+            
+            # 首选项设置
+            self.chrome_options.add_experimental_option('prefs', {
+                'profile.default_content_setting_values': {
+                    'images': 1,
+                    'javascript': 1,
+                    'plugins': 1,
+                    'popups': 1,
+                    'notifications': 2,
+                },
+                'profile.managed_default_content_settings': {
+                    'images': 1,
+                    'javascript': 1,
+                    'plugins': 1,
+                    'popups': 1,
+                    'notifications': 2
+                },
+                'site-isolation-trial-opt-out': True
             })
+            
+        else:  # Edge
+            # 配置Edge浏览器选项
+            self.edge_options = EdgeOptions()
+            
+            # 添加兼容性和性能参数
+            self.edge_options.add_argument('--disable-software-rasterizer')
+            self.edge_options.add_argument('--disable-features=IsolateOrigins,site-per-process')
+            self.edge_options.add_argument('--disable-site-isolation-trials')
+            self.edge_options.add_argument('--no-sandbox')
+            self.edge_options.add_argument('--disable-dev-shm-usage')
+            self.edge_options.add_argument('--disable-gpu')
+            
+            # 设置用户代理（使用正确格式，避免Edge打开多个错误页面）
+            self.edge_options.add_argument(
+                "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+            )
+            
+            # 实验性选项
+            self.edge_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
+            self.edge_options.add_experimental_option('detach', False)
+            self.edge_options.add_experimental_option('useAutomationExtension', False)
+            
+            # 禁用自动化控制特征
+            self.edge_options.add_argument('--disable-blink-features=AutomationControlled')
+            
+            # 使用更宽松的浏览器设置以允许网站正常功能运行
+            self.edge_options.add_argument('--disable-extensions')
+            self.edge_options.add_argument('--disable-notifications')
+            self.edge_options.add_argument('--disable-features=TranslateUI')
+            
+            # 开启性能日志以捕获Network事件（Chromium驱动支持）
+            try:
+                self.edge_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+            except Exception:
+                pass
+            
+            # 添加基本的首选项设置，保持简单
+            self.edge_options.add_experimental_option('prefs', {
+                'profile.default_content_setting_values': {
+                    'images': 1,
+                    'javascript': 1,
+                    'plugins': 1,  # 允许必要的插件
+                    'popups': 1,   # 允许必要的弹窗
+                    'notifications': 2,  # 阻止通知
+                },
+                # 移除了过于严格的内容设置异常规则
+                'profile.managed_default_content_settings': {
+                    'images': 1,
+                    'javascript': 1,
+                    'plugins': 1,
+                    'popups': 1,
+                    'notifications': 2
+                },
+                # 禁用站点隔离
+                'site-isolation-trial-opt-out': True
+                })
         
         # 项目容量映射
         self.project_capacities = {
@@ -163,23 +244,49 @@ class ESolarScraper:
              logger.warning(f'关闭WebDriver时发生异常: {e}')
     
     def initialize_driver(self):
-        """初始化WebDriver，不使用CDP命令以避免兼容性问题"""
+        """初始化WebDriver，支持Chrome和Edge"""
         try:
-            # 获取当前脚本所在目录
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            # 假设msedgedriver.exe与脚本在同一目录
-            driver_path = os.path.join(script_dir, 'msedgedriver.exe')
-            service = None
-            
-            # 检查驱动文件是否存在
-            if os.path.exists(driver_path):
-                # 使用指定路径的驱动
-                service = Service(driver_path)
-                self.driver = webdriver.Edge(service=service, options=self.edge_options)
-            else:
-                # 使用系统PATH中的驱动，在CI环境中使用ChromeDriver
-                logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
-                self.driver = webdriver.Edge(options=self.edge_options)
+            if self.browser_type == 'chrome':
+                logger.info("初始化Chrome浏览器...")
+                
+                # 在CI环境中使用webdriver-manager自动管理ChromeDriver
+                if is_ci_environment():
+                    logger.info("CI环境：使用webdriver-manager自动管理ChromeDriver")
+                    service = ChromeService(ChromeDriverManager().install())
+                else:
+                    # 本地环境，尝试使用系统PATH中的ChromeDriver
+                    try:
+                        service = ChromeService()
+                        logger.info("使用系统PATH中的ChromeDriver")
+                    except Exception as e:
+                        logger.warning(f"系统PATH中的ChromeDriver不可用: {e}")
+                        logger.info("回退到webdriver-manager")
+                        service = ChromeService(ChromeDriverManager().install())
+                
+                # 初始化Chrome WebDriver
+                self.driver = webdriver.Chrome(
+                    service=service,
+                    options=self.chrome_options
+                )
+                
+            else:  # Edge
+                logger.info("初始化Edge浏览器...")
+                
+                # 获取当前脚本所在目录
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                # 假设msedgedriver.exe与脚本在同一目录
+                driver_path = os.path.join(script_dir, 'msedgedriver.exe')
+                service = None
+                
+                # 检查驱动文件是否存在
+                if os.path.exists(driver_path):
+                    # 使用指定路径的驱动
+                    service = EdgeService(driver_path)
+                    self.driver = webdriver.Edge(service=service, options=self.edge_options)
+                else:
+                    # 使用系统PATH中的驱动
+                    logger.info("未找到本地Edge驱动，将使用系统PATH中的驱动")
+                    self.driver = webdriver.Edge(options=self.edge_options)
             
             # 设置页面加载超时
             self.driver.set_page_load_timeout(30)
@@ -188,7 +295,7 @@ class ESolarScraper:
             # 设置隐式等待时间
             self.driver.implicitly_wait(10)
             
-            logger.info('WebDriver初始化成功，未使用CDP命令以避免兼容性问题')
+            logger.info(f'{self.browser_type} WebDriver初始化成功')
         except Exception as e:
             logger.error(f'WebDriver初始化失败: {str(e)}')
             raise

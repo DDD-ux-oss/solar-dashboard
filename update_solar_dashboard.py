@@ -11,8 +11,10 @@ from PIL import Image
 from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.service import Service
-from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
@@ -20,6 +22,8 @@ from selenium.common.exceptions import (
     ElementNotInteractableException, NoSuchElementException,
     ElementClickInterceptedException
 )
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from huawei_scraper import HuaweiFusionSolarScraper
 from esolar_scraper import ESolarScraper
 
@@ -66,6 +70,94 @@ def get_weather_description(code):
     }
     
     return weather_map.get(code, '未知天气')
+
+def is_ci_environment():
+    """检测是否在CI环境中运行"""
+    return (
+        os.getenv('CI') == 'true' or 
+        os.getenv('GITHUB_ACTIONS') == 'true' or
+        os.getenv('CONTINUOUS_INTEGRATION') == 'true' or
+        os.getenv('RUNNER_DEBUG') is not None
+    )
+
+def create_webdriver(browser_type=None):
+    """
+    创建WebDriver实例，自动检测CI环境并选择合适的浏览器
+    :param browser_type: 指定浏览器类型 ('chrome' 或 'edge')，None表示自动选择
+    :return: WebDriver实例
+    """
+    ci_env = is_ci_environment()
+    
+    # 如果没有指定浏览器类型，根据环境自动选择
+    if browser_type is None:
+        browser_type = 'chrome' if ci_env else 'edge'
+    
+    try:
+        if browser_type.lower() == 'chrome':
+            logger.info("初始化Chrome浏览器...")
+            chrome_options = ChromeOptions()
+            
+            # CI环境配置
+            if ci_env:
+                chrome_options.add_argument('--headless')
+                chrome_options.add_argument('--no-sandbox')
+                chrome_options.add_argument('--disable-dev-shm-usage')
+                chrome_options.add_argument('--disable-gpu')
+                chrome_options.add_argument('--remote-debugging-port=9222')
+            
+            # 通用配置
+            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            chrome_options.add_argument('--disable-extensions')
+            chrome_options.add_argument('--disable-notifications')
+            chrome_options.add_argument('--window-size=1920,1080')
+            chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+            
+            # 实验性选项
+            chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+            
+            # 使用webdriver-manager自动管理ChromeDriver
+            service = ChromeService(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            
+        elif browser_type.lower() == 'edge':
+            logger.info("初始化Edge浏览器...")
+            edge_options = EdgeOptions()
+            
+            # CI环境配置
+            if ci_env:
+                edge_options.add_argument('--headless')
+                edge_options.add_argument('--no-sandbox')
+                edge_options.add_argument('--disable-dev-shm-usage')
+                edge_options.add_argument('--disable-gpu')
+            
+            # 通用配置
+            edge_options.add_argument('--disable-blink-features=AutomationControlled')
+            edge_options.add_argument('--window-size=1920,1080')
+            edge_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0')
+            
+            # 实验性选项
+            edge_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+            edge_options.add_experimental_option('useAutomationExtension', False)
+            
+            # 使用webdriver-manager自动管理EdgeDriver
+            service = EdgeService(EdgeChromiumDriverManager().install())
+            driver = webdriver.Edge(service=service, options=edge_options)
+            
+        else:
+            raise ValueError(f"不支持的浏览器类型: {browser_type}")
+        
+        # 设置超时时间
+        driver.set_page_load_timeout(60)
+        driver.set_script_timeout(60)
+        driver.implicitly_wait(15)
+        
+        logger.info(f"{browser_type.capitalize()}浏览器初始化成功")
+        return driver
+        
+    except Exception as e:
+        logger.error(f"浏览器初始化失败: {str(e)}")
+        raise
 
 
 class SolarDashboardUpdater:
@@ -269,8 +361,8 @@ class SolarDashboardUpdater:
         def login(self):
             """登录SEMS系统"""
             try:
-                # 初始化WebDriver
-                self.driver = webdriver.Edge(options=self.edge_options)
+                # 使用新的create_webdriver函数初始化WebDriver
+                self.driver = create_webdriver()
                 
                 # 设置页面加载超时
                 self.driver.set_page_load_timeout(30)
