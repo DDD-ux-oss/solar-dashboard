@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-30 03:14:56",
+  "timestamp": "2025-12-01 03:26:58",
   "data": [
     {
       "id": 5,
       "name": "黄河植物园",
       "dcCapacity": 0.10384,
       "acCapacity": 0.1,
-      "dailyGeneration": 0,
+      "dailyGeneration": 30.0,
       "efficiencyHours": 5.5,
       "avgEfficiencyHours": 5.83,
       "efficiencyColor": "bg-green-500",
@@ -32,6 +32,6 @@
   "summary": {
     "total_dc_capacity": 1.69242,
     "total_ac_capacity": 1.6885800000000002,
-    "total_daily_generation": 0
+    "total_daily_generation": 30.0
   }
 }
