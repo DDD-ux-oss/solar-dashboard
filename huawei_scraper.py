@@ -280,6 +280,7 @@ class HuaweiFusionSolarScraper:
                 
                 # 访问登录页面 - 尝试多种URL
                 login_urls = [
+                    'https://intl.fusionsolar.huawei.com',
                     'https://uni01cn.fusionsolar.huawei.com/uniportal/pvmswebsite/assets/build/cloud.html?app-id=smartpvms&instance-id=smartpvms',
                     'https://uni01cn.fusionsolar.huawei.com',
                     'https://fusionsolar.huawei.com'

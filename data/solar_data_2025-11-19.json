@@ -1,0 +1,47 @@
+{
+  "date": "2025-11-19",
+  "generation_data": {
+    "timestamp": "2025-11-20 02:56:40",
+    "data": [
+      {
+        "id": 5,
+        "name": "黄河植物园",
+        "dcCapacity": 0.10384,
+        "acCapacity": 0.1,
+        "dailyGeneration": 0,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-green-500",
+        "power_curve": {
+          "data_points": []
+        }
+      },
+      {
+        "id": 6,
+        "name": "零碳商业园",
+        "dcCapacity": 1.58858,
+        "acCapacity": 1.58858,
+        "dailyGeneration": 0,
+        "efficiencyHours": 5.5,
+        "avgEfficiencyHours": 5.83,
+        "efficiencyColor": "bg-green-500",
+        "power_curve": {
+          "data_points": []
+        }
+      }
+    ],
+    "total_projects": 2,
+    "summary": {
+      "total_dc_capacity": 1.69242,
+      "total_ac_capacity": 1.6885800000000002,
+      "total_daily_generation": 0
+    }
+  },
+  "weather_data": {
+    "date": "2025-11-19",
+    "temperature": 6.2,
+    "humidity": 65,
+    "weather_type": "sunny",
+    "weather_description": "晴"
+  }
+}

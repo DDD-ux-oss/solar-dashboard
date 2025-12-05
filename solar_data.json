@@ -1,64 +1,12 @@
 {
-  "timestamp": "2025-11-13 14:19:08",
+  "timestamp": "2025-12-05 03:05:15",
   "data": [
-    {
-      "id": 1,
-      "name": "宋滩",
-      "dcCapacity": 5.9826,
-      "acCapacity": 4.77,
-      "dailyGeneration": 16755.0,
-      "efficiencyHours": 5.5,
-      "avgEfficiencyHours": 5.83,
-      "efficiencyColor": "bg-green-500",
-      "power_curve": {
-        "data_points": []
-      }
-    },
-    {
-      "id": 2,
-      "name": "李赞皇",
-      "dcCapacity": 1.94346,
-      "acCapacity": 1.7,
-      "dailyGeneration": 4103.73,
-      "efficiencyHours": 5.5,
-      "avgEfficiencyHours": 5.83,
-      "efficiencyColor": "bg-yellow-400",
-      "power_curve": {
-        "data_points": []
-      }
-    },
-    {
-      "id": 3,
-      "name": "滨北南邱",
-      "dcCapacity": 5.3749,
-      "acCapacity": 4.3,
-      "dailyGeneration": 13914.61,
-      "efficiencyHours": 5.5,
-      "avgEfficiencyHours": 5.83,
-      "efficiencyColor": "bg-green-500",
-      "power_curve": {
-        "data_points": []
-      }
-    },
-    {
-      "id": 4,
-      "name": "水立方",
-      "dcCapacity": 1.16938,
-      "acCapacity": 1,
-      "dailyGeneration": 1678.77,
-      "efficiencyHours": 5.5,
-      "avgEfficiencyHours": 5.83,
-      "efficiencyColor": "bg-green-500",
-      "power_curve": {
-        "data_points": []
-      }
-    },
     {
       "id": 5,
       "name": "黄河植物园",
       "dcCapacity": 0.10384,
       "acCapacity": 0.1,
-      "dailyGeneration": 209.8,
+      "dailyGeneration": 320.0,
       "efficiencyHours": 5.5,
       "avgEfficiencyHours": 5.83,
       "efficiencyColor": "bg-green-500",
@@ -71,7 +19,7 @@
       "name": "零碳商业园",
       "dcCapacity": 1.58858,
       "acCapacity": 1.58858,
-      "dailyGeneration": 1539.0,
+      "dailyGeneration": 0,
       "efficiencyHours": 5.5,
       "avgEfficiencyHours": 5.83,
       "efficiencyColor": "bg-green-500",
@@ -80,16 +28,10 @@
       }
     }
   ],
-  "total_projects": 6,
+  "total_projects": 2,
   "summary": {
-    "total_dc_capacity": 16.16276,
-    "total_ac_capacity": 13.45858,
-    "total_daily_generation": 38200.909999999996
-  },
-  "6": {
-    "name": "零碳商业园",
-    "dcCapacity": 1.58858,
-    "acCapacity": 1.58858,
-    "dailyGeneration": 1539.0
+    "total_dc_capacity": 1.69242,
+    "total_ac_capacity": 1.6885800000000002,
+    "total_daily_generation": 320.0
   }
 }
