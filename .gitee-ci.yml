@@ -36,7 +36,7 @@ run_scraper:
     - echo "=== 检查CI环境 ==="
     - python3 check_ci_packages.py
     - echo "=== 执行太阳能数据爬虫脚本 ==="
-    - python3 update_solar_dashboard.py
+    - python3 main.py
   artifacts:
     paths:
       - data/
@@ -57,7 +57,7 @@ update_repository:
     - git config --global user.email "ci@example.com"
     - git remote set-url origin https://oauth2:${GITEE_TOKEN}@gitee.com/${CI_REPOSITORY_URL#*//*/}
     - echo "=== 提交更新的文件 ==="
-    - git add data/solar_data.json screenshots/*
+    - git add data/*.json screenshots/*
     - git commit -m "自动更新太阳能数据 $(date +%Y-%m-%d)"
     - git push origin HEAD:main
   only:
