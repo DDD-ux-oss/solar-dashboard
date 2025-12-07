@@ -33,13 +33,19 @@ run_scraper:
     - docker
   image: ubuntu:latest
   script:
-    - echo "=== 检查CI环境 ==="
+    - echo "=== 检查当前目录结构 ==="
     - pwd
     - ls -la
+    - echo "=== 检查main.py是否存在 ==="
+    - if [ -f "main.py" ]; then echo "main.py存在"; else echo "main.py不存在"; fi
+    - echo "=== 显示main.py内容 ==="
     - cat main.py
+    - echo "=== 检查update_solar_dashboard.py是否存在 ==="
+    - if [ -f "update_solar_dashboard.py" ]; then echo "update_solar_dashboard.py存在"; else echo "update_solar_dashboard.py不存在"; fi
+    - echo "=== 执行check_ci_packages.py ==="
     - python3 check_ci_packages.py
     - echo "=== 执行太阳能数据爬虫脚本 ==="
-    - python3 main.py
+    - python3 ./main.py
   artifacts:
     paths:
       - data/
