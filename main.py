@@ -12,6 +12,12 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# 添加调试输出
+print("=== main.py 开始执行 ===")
+print(f"当前工作目录: {os.getcwd()}")
+print(f"文件存在性: {os.path.exists(__file__)} 路径: {__file__}")
+print(f"Python 版本: {sys.version}")
+
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
