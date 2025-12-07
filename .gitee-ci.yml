@@ -34,6 +34,9 @@ run_scraper:
   image: ubuntu:latest
   script:
     - echo "=== 检查CI环境 ==="
+    - pwd
+    - ls -la
+    - cat main.py
     - python3 check_ci_packages.py
     - echo "=== 执行太阳能数据爬虫脚本 ==="
     - python3 main.py
