@@ -281,6 +281,31 @@ class HuaweiFusionSolarScraper:
                     logger.error("驱动会话无效，无法执行登录")
                     return False
                 
+                # 添加额外的DNS测试和调试信息
+                try:
+                    import requests
+                    import socket
+                    
+                    # 测试Python的DNS解析
+                    logger.info("=== 测试Python的DNS解析 ===")
+                    for url in ['intl.fusionsolar.huawei.com', 'huawei.com', 'github.com']:
+                        try:
+                            ip = socket.gethostbyname(url)
+                            logger.info(f"Python DNS解析 {url}: {ip}")
+                        except Exception as dns_e:
+                            logger.error(f"Python DNS解析 {url} 失败: {str(dns_e)}")
+                    
+                    # 测试Python的网络连接
+                    logger.info("=== 测试Python的网络连接 ===")
+                    for url in ['https://intl.fusionsolar.huawei.com', 'https://www.huawei.com', 'https://www.github.com']:
+                        try:
+                            response = requests.head(url, timeout=10, verify=False)
+                            logger.info(f"Python网络连接 {url}: {response.status_code}")
+                        except Exception as conn_e:
+                            logger.error(f"Python网络连接 {url} 失败: {str(conn_e)}")
+                except Exception as debug_e:
+                    logger.warning(f"调试信息收集失败: {str(debug_e)}")
+                
                 # 访问登录页面 - 尝试多种URL
                 login_urls = [
                     'https://intl.fusionsolar.huawei.com',
