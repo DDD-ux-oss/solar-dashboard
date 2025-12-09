@@ -88,6 +88,9 @@ class HuaweiFusionSolarScraper:
             # 用户代理
             self.chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
             
+            # 添加DNS服务器设置，解决域名解析问题
+            self.chrome_options.add_argument('--dns-servers=8.8.8.8,8.8.4.4')
+            
             # 实验性选项
             self.chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
             self.chrome_options.add_experimental_option('useAutomationExtension', False)

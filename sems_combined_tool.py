@@ -154,6 +154,9 @@ class SEMSScreenshotTool:
         # 禁用自动化控制特征
         self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         
+        # 添加DNS服务器设置，解决域名解析问题
+        self.chrome_options.add_argument('--dns-servers=8.8.8.8,8.8.4.4')
+        
         # 项目容量映射（从solar_data.json获取的实际数据）
         self.project_capacities = {
             1: {'dcCapacity': 5.9826, 'acCapacity': 4.77},    # 梁才宋滩
