@@ -285,6 +285,7 @@ class HuaweiFusionSolarScraper:
                 try:
                     import requests
                     import socket
+                    import dns.resolver  # 需要安装dnspython
                     
                     # 测试Python的DNS解析
                     logger.info("=== 测试Python的DNS解析 ===")
@@ -294,6 +295,19 @@ class HuaweiFusionSolarScraper:
                             logger.info(f"Python DNS解析 {url}: {ip}")
                         except Exception as dns_e:
                             logger.error(f"Python DNS解析 {url} 失败: {str(dns_e)}")
+                    
+                    # 使用不同的DNS服务器测试解析
+                    logger.info("=== 使用不同DNS服务器测试解析 ===")
+                    dns_servers = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '208.67.222.222', '208.67.220.220']
+                    for dns_server in dns_servers:
+                        try:
+                            resolver = dns.resolver.Resolver()
+                            resolver.nameservers = [dns_server]
+                            answers = resolver.resolve('intl.fusionsolar.huawei.com', 'A')
+                            ips = [rdata.address for rdata in answers]
+                            logger.info(f"使用DNS服务器 {dns_server} 解析 intl.fusionsolar.huawei.com: {ips}")
+                        except Exception as dns_e:
+                            logger.error(f"使用DNS服务器 {dns_server} 解析 intl.fusionsolar.huawei.com 失败: {str(dns_e)}")
                     
                     # 测试Python的网络连接
                     logger.info("=== 测试Python的网络连接 ===")
