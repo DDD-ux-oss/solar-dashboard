@@ -1,86 +1,48 @@
-# 定时执行配置 - 每天UTC时间1:30（北京时间9:30）执行
-# Gitee流水线的定时执行配置通过界面设置，此处为说明
+# Gitee流水线配置
 
 stages:
   - install
   - scrape
   - update
-  - deploy
 
-# 安装依赖
 install_dependencies:
   stage: install
   tags:
     - docker
   image: ubuntu:latest
   script:
-    - echo "=== 安装系统依赖（Chrome浏览器和驱动） ==="
-    - apt-get update && apt-get install -y wget curl unzip libxss1 libxtst6 libxrandr2 libasound2 libpangocairo-1.0-0 libatk1.0-0 libcairo-gobject2 libgtk-3-0 libgdk-pixbuf2.0-0
-    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
-    - echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-    - apt-get update && apt-get install -y google-chrome-stable chromium-chromedriver
-    - echo "=== 设置Python环境 ==="
-    - apt-get install -y python3 python3-pip python3-venv
+    - echo "=== 安装系统依赖 ==="
+    - apt-get update && apt-get install -y python3 python3-pip
     - echo "=== 安装Python依赖 ==="
     - pip3 install --upgrade pip
-    - pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
     - pip3 install -r requirements.txt
 
-# 执行爬虫脚本
 run_scraper:
   stage: scrape
   tags:
     - docker
   image: ubuntu:latest
   script:
-    - echo "=== 检查当前目录结构 ==="
-    - pwd
-    - ls -la
-    - echo "=== 检查main.py是否存在 ==="
-    - if [ -f "main.py" ]; then echo "main.py存在"; else echo "main.py不存在"; fi
-    - echo "=== 显示main.py内容 ==="
-    - cat main.py
-    - echo "=== 检查update_solar_dashboard.py是否存在 ==="
-    - if [ -f "update_solar_dashboard.py" ]; then echo "update_solar_dashboard.py存在"; else echo "update_solar_dashboard.py不存在"; fi
     - echo "=== 执行太阳能数据爬虫脚本 ==="
-    - python3 ./main.py
+    - python3 main.py
   artifacts:
     paths:
       - data/
-      - screenshots/
 
-# 更新仓库数据
 update_repository:
   stage: update
   tags:
     - docker
   image: ubuntu:latest
   script:
-    - echo "=== 检查数据文件更新 ==="
-    - ls -la data/
     - echo "=== 配置Git环境 ==="
     - apt-get update && apt-get install -y git
     - git config --global user.name "Gitee CI"
     - git config --global user.email "ci@example.com"
-    - git remote set-url origin https://oauth2:${GITEE_TOKEN}@gitee.com/${CI_REPOSITORY_URL#*//*/}
-    - echo "=== 提交更新的文件 ==="
-    - git add data/*.json screenshots/*
+    - echo "=== 提交更新 ==="
+    - git add data/*.json
     - git commit -m "自动更新太阳能数据 $(date +%Y-%m-%d)"
-    - git push origin HEAD:main
   only:
     - main
   dependencies:
     - run_scraper
-
-# 部署（如果需要）
-deploy_site:
-  stage: deploy
-  tags:
-    - docker
-  image: ubuntu:latest
-  script:
-    - echo "=== 部署网站（如果需要） ==="
-  only:
-    - main
-  dependencies:
-    - update_repository
