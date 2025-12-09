@@ -320,56 +320,19 @@ class HuaweiFusionSolarScraper:
                 except Exception as debug_e:
                     logger.warning(f"调试信息收集失败: {str(debug_e)}")
                 
-                # 访问登录页面 - 尝试多种URL
-                login_urls = [
+                # 访问登录页面 - 三级访问策略：域名访问 → IP直接访问 → 代理服务器访问
+                login_url = None
+                
+                # 第一级：尝试域名访问
+                logger.info("=== 第一级：尝试域名访问 ===")
+                domain_urls = [
                     'https://intl.fusionsolar.huawei.com',
                     'https://uni01cn.fusionsolar.huawei.com/uniportal/pvmswebsite/assets/build/cloud.html?app-id=smartpvms&instance-id=smartpvms',
                     'https://uni01cn.fusionsolar.huawei.com',
                     'https://fusionsolar.huawei.com'
                 ]
                 
-                # 添加备用IP地址访问方案
-                try:
-                    import requests
-                    import socket
-                    
-                    # 尝试通过其他方式获取华为FusionSolar服务器的IP地址
-                    logger.info("=== 尝试获取华为FusionSolar服务器IP地址 ===")
-                    
-                    # 尝试从公共DNS服务器获取IP地址
-                    dns_servers = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '208.67.222.222', '208.67.220.220']
-                    for dns_server in dns_servers:
-                        try:
-                            # 使用dig命令获取IP地址（如果可用）
-                            import subprocess
-                            result = subprocess.run(['dig', '+short', 'intl.fusionsolar.huawei.com', '@' + dns_server], 
-                                                 capture_output=True, text=True, timeout=10)
-                            if result.returncode == 0 and result.stdout.strip():
-                                ips = result.stdout.strip().split('\n')
-                                logger.info(f"通过dig命令使用DNS服务器 {dns_server} 获取到的IP地址: {ips}")
-                                # 将IP地址添加到登录URL列表
-                                for ip in ips:
-                                    if ip and ip.count('.') == 3:  # 基本的IP地址验证
-                                        login_urls.append(f'https://{ip}')
-                                break
-                        except Exception as dig_e:
-                            logger.warning(f"使用dig命令获取IP地址失败: {str(dig_e)}")
-                    
-                    # 尝试使用已知的IP地址（基于历史记录）
-                    known_ips = [
-                        '185.176.7.22',  # 华为云服务器IP地址示例
-                        '185.176.7.23',  # 华为云服务器IP地址示例
-                        '49.4.85.86',    # 华为云服务器IP地址示例
-                        '49.4.85.87'     # 华为云服务器IP地址示例
-                    ]
-                    for ip in known_ips:
-                        login_urls.append(f'https://{ip}')
-                        
-                except Exception as ip_e:
-                    logger.warning(f"获取IP地址失败: {str(ip_e)}")
-                
-                login_url = None
-                for url in login_urls:
+                for url in domain_urls:
                     try:
                         logger.info(f"尝试访问登录页面: {url}")
                         self.driver.get(url)
@@ -378,46 +341,112 @@ class HuaweiFusionSolarScraper:
                         break  # 如果成功访问，跳出循环
                     except Exception as url_e:
                         logger.error(f"访问登录页面 {url} 失败: {str(url_e)}")
-                        # 短暂等待后尝试下一个URL
+                        # 等待3秒后重试下一个URL
                         time.sleep(3)
                 
+                # 第二级：如果域名访问失败，尝试直接使用IP地址访问
                 if not login_url:
-                    logger.error("所有登录URL都无法访问")
+                    logger.info("=== 第二级：域名访问失败，尝试直接使用IP地址访问 ===")
                     
-                    # 最后尝试使用代理服务器
-                    try:
-                        logger.info("尝试使用代理服务器访问...")
-                        # 配置Chrome使用代理服务器
-                        proxy_url = "http://104.21.18.185:8080"  # 公共代理服务器示例（可能不可用）
-                        
-                        # 创建新的Chrome选项，配置代理
-                        chrome_options = webdriver.ChromeOptions()
-                        chrome_options.add_argument(f'--proxy-server={proxy_url}')
-                        chrome_options.add_argument('--ignore-certificate-errors')
-                        chrome_options.add_argument('--ignore-ssl-errors')
-                        
-                        # 如果是CI环境，使用无头模式
-                        if os.environ.get('CI') == 'true':
-                            chrome_options.add_argument('--headless')
-                            chrome_options.add_argument('--no-sandbox')
-                            chrome_options.add_argument('--disable-dev-shm-usage')
-                            chrome_options.add_argument('--disable-gpu')
-                            chrome_options.add_argument('--remote-debugging-port=9222')
-                            chrome_options.add_argument('--window-size=1920,1080')
-                        
-                        # 重新初始化浏览器，使用代理服务器
-                        logger.info(f"使用代理服务器 {proxy_url} 重新初始化Chrome浏览器...")
-                        self.driver.quit()
-                        self.driver = webdriver.Chrome(options=chrome_options)
-                        self.driver.set_page_load_timeout(60)
-                        self.driver.implicitly_wait(20)
-                        
-                        # 尝试使用代理服务器访问
-                        proxy_login_url = 'https://intl.fusionsolar.huawei.com'
-                        logger.info(f"使用代理服务器尝试访问: {proxy_login_url}")
-                        self.driver.get(proxy_login_url)
-                        logger.info(f"使用代理服务器访问登录页面请求已发送: {proxy_login_url}")
-                        login_url = proxy_login_url
+                    # 华为FusionSolar服务器的已知IP地址列表
+                    known_ips = [
+                        '185.176.7.22',  # 华为云服务器IP地址
+                        '185.176.7.23',  # 华为云服务器IP地址
+                        '49.4.85.86',    # 华为云服务器IP地址
+                        '49.4.85.87',    # 华为云服务器IP地址
+                        '101.89.120.107',  # 华为云服务器IP地址
+                        '101.89.120.108'   # 华为云服务器IP地址
+                    ]
+                    
+                    # 目标域名
+                    target_domain = 'intl.fusionsolar.huawei.com'
+                    
+                    for ip in known_ips:
+                        try:
+                            logger.info(f"尝试使用IP地址 {ip} 访问 {target_domain}")
+                            
+                            # 创建一个新的Chrome选项，用于IP地址访问
+                            ip_chrome_options = webdriver.ChromeOptions()
+                            
+                            # 复制基本配置
+                            for arg in self.chrome_options.arguments:
+                                ip_chrome_options.add_argument(arg)
+                            
+                            # 添加Host头配置
+                            ip_chrome_options.add_argument(f'--host-resolver-rules="MAP {target_domain} {ip}"')
+                            
+                            # 关闭当前浏览器实例
+                            self.driver.quit()
+                            self.driver = None
+                            
+                            # 重新初始化浏览器，使用新的选项
+                            self.driver = webdriver.Chrome(options=ip_chrome_options)
+                            
+                            # 设置超时和隐式等待
+                            self.driver.set_page_load_timeout(60)
+                            self.driver.implicitly_wait(20)
+                            
+                            # 使用原始域名访问（但会被映射到IP地址）
+                            self.driver.get(f'https://{target_domain}')
+                            
+                            logger.info(f"成功使用IP地址 {ip} 访问 {target_domain}")
+                            login_url = f'https://{target_domain}'
+                            break
+                        except Exception as ip_e:
+                            logger.error(f"使用IP地址 {ip} 访问失败: {str(ip_e)}")
+                            # 等待3秒后重试下一个IP
+                            time.sleep(3)
+                    
+                # 第三级：如果IP地址访问失败，尝试使用代理服务器
+                if not login_url:
+                    logger.info("=== 第三级：IP地址访问失败，尝试使用代理服务器 ===")
+                    
+                    # 常用的免费代理服务器列表（需要定期更新）
+                    proxies = [
+                        'http://103.152.112.114:3128',
+                        'http://103.152.112.115:3128',
+                        'http://103.152.112.116:3128',
+                        'http://103.152.112.117:3128'
+                    ]
+                    
+                    for proxy in proxies:
+                        try:
+                            logger.info(f"尝试使用代理服务器 {proxy}")
+                            
+                            # 关闭当前浏览器实例
+                            self.driver.quit()
+                            self.driver = None
+                            
+                            # 创建新的Chrome选项，配置代理
+                            proxy_chrome_options = webdriver.ChromeOptions()
+                            
+                            # 复制基本配置
+                            for arg in self.chrome_options.arguments:
+                                proxy_chrome_options.add_argument(arg)
+                            
+                            # 添加代理服务器配置
+                            proxy_chrome_options.add_argument(f'--proxy-server={proxy}')
+                            proxy_chrome_options.add_argument('--ignore-certificate-errors')
+                            proxy_chrome_options.add_argument('--ignore-ssl-errors')
+                            
+                            # 重新初始化浏览器，使用代理服务器
+                            self.driver = webdriver.Chrome(options=proxy_chrome_options)
+                            
+                            # 设置超时和隐式等待
+                            self.driver.set_page_load_timeout(60)
+                            self.driver.implicitly_wait(20)
+                            
+                            # 尝试使用代理服务器访问
+                            proxy_login_url = 'https://intl.fusionsolar.huawei.com'
+                            logger.info(f"使用代理服务器尝试访问: {proxy_login_url}")
+                            self.driver.get(proxy_login_url)
+                            logger.info(f"使用代理服务器访问登录页面请求已发送: {proxy_login_url}")
+                            login_url = proxy_login_url
+                            break
+                        except Exception as proxy_e:
+                            logger.error(f"使用代理服务器 {proxy} 失败: {str(proxy_e)}")
+                            # 等待3秒后重试下一个代理
+                            time.sleep(3)
                     except Exception as proxy_e:
                         logger.error(f"使用代理服务器访问失败: {str(proxy_e)}")
                 
