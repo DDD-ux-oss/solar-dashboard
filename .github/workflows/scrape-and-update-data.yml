@@ -64,11 +64,10 @@ jobs:
           echo "跳过ping测试（GitHub Actions可能限制ICMP流量）"
           curl -v https://intl.fusionsolar.huawei.com 2>&1 | head -50 || echo "curl测试失败，但继续执行工作流"
 
-      # 步骤7: 检查CI环境预装包
-      - name: 检查CI环境预装包
+      # 步骤7: 跳过检查CI环境预装包（脚本已删除）
+      - name: 跳过检查CI环境预装包
         run: |
-          echo "=== 检查CI环境预装包情况 ==="
-          python check_ci_packages.py
+          echo "=== 跳过CI环境预装包检查（脚本已删除）==="
 
       # 步骤8: 安装Python依赖
       - name: 安装Python依赖
