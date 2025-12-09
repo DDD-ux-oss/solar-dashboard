@@ -27,7 +27,15 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # 步骤3: 安装系统依赖（Chrome浏览器和驱动）
+      # 步骤3: 修改DNS配置（解决域名解析问题）
+      - name: 修改DNS配置
+        run: |
+          sudo rm -f /etc/resolv.conf
+          sudo bash -c 'echo "nameserver 8.8.8.8" > /etc/resolv.conf'
+          sudo bash -c 'echo "nameserver 8.8.4.4" >> /etc/resolv.conf'
+          cat /etc/resolv.conf
+
+      # 步骤4: 安装系统依赖（Chrome浏览器和驱动）
       - name: 安装系统依赖
         run: |
           sudo apt-get update
@@ -38,35 +46,41 @@ jobs:
           sudo apt-get install -y google-chrome-stable
           sudo apt-get install -y chromium-chromedriver
 
-      # 步骤4: 检查CI环境预装包
+      # 步骤5: 测试DNS解析
+      - name: 测试DNS解析
+        run: |
+          # 测试华为域名解析
+          nslookup intl.fusionsolar.huawei.com
+          nslookup huawei.com
+          
+          # 测试公共域名作为对照
+          nslookup github.com
+          nslookup google.com
+
+      # 步骤6: 测试网络连接
+      - name: 测试网络连接
+        run: |
+          ping -c 3 8.8.8.8
+          curl -v https://intl.fusionsolar.huawei.com 2>&1 | head -50
+
+      # 步骤7: 检查CI环境预装包
       - name: 检查CI环境预装包
         run: |
           echo "=== 检查CI环境预装包情况 ==="
           python check_ci_packages.py
 
-      # 步骤5: 安装Python依赖
+      # 步骤8: 安装Python依赖
       - name: 安装Python依赖
         run: |
-          which python
-          python --version
-          which python3
-          python3 --version
-
           python -m pip install --upgrade pip
-          python3 -m pip install --upgrade pip
-
           pip install -r requirements.txt
-          pip3 install -r requirements.txt
           pip install webdriver-manager
-          pip3 install webdriver-manager
 
           python3 -c "import requests; print('Python3 requests安装成功')" || echo "Python3 requests导入失败"
           python3 -c "import selenium; print('Python3 selenium安装成功')" || echo "Python3 selenium导入失败"
           python3 -c "import easyocr; print('Python3 easyocr安装成功')" || echo "Python3 easyocr导入失败"
 
-          pip3 list
-
-      # 步骤6: 运行太阳能数据爬虫
+      # 步骤9: 运行太阳能数据爬虫
       - name: 运行太阳能数据爬虫
         env:
           HUAWEI_USERNAME: ${{ secrets.HUAWEI_USERNAME }}
@@ -91,7 +105,7 @@ jobs:
             exit 1
           }
 
-      # 步骤7: 检查数据是否更新
+      # 步骤10: 检查数据更新
       - name: 检查数据更新
         run: |
           if [ -s solar_data.json ]; then
@@ -102,7 +116,7 @@ jobs:
             exit 1
           fi
 
-      # 步骤8: 提交更新的数据文件到仓库
+      # 步骤11: 提交更新的数据文件到仓库
       - name: 提交数据更新
         run: |
           git config --global user.name 'github-actions[bot]'
