@@ -364,6 +364,14 @@ class HuaweiFusionSolarScraper:
                             domain = mapping['domain']
                             logger.info(f"尝试使用IP地址 {ip} 访问 {domain}")
                             
+                            # 关闭当前浏览器实例（如果存在）
+                            if self.driver:
+                                try:
+                                    self.driver.quit()
+                                except:
+                                    pass
+                                self.driver = None
+                            
                             # 创建一个新的Chrome选项，用于IP地址访问
                             ip_chrome_options = webdriver.ChromeOptions()
                             
@@ -374,18 +382,37 @@ class HuaweiFusionSolarScraper:
                             # 添加Host头映射规则（注意：不要使用引号）
                             ip_chrome_options.add_argument(f'--host-resolver-rules=MAP {domain} {ip}')
                             
-                            # 关闭当前浏览器实例
-                            self.driver.quit()
-                            self.driver = None
+                            # 使用与__enter__方法相同的浏览器初始化逻辑
+                            success = False
+                            for attempt in range(self.retry_attempts):
+                                try:
+                                    logger.info(f"第 {attempt + 1}/{self.retry_attempts} 次尝试初始化浏览器...")
+                                    
+                                    if self.browser_type == 'chrome':
+                                        logger.info("初始化Chrome浏览器...")
+                                        self.driver = webdriver.Chrome(options=ip_chrome_options)
+                                    else:  # edge
+                                        logger.info("初始化Edge浏览器...")
+                                        self.driver = webdriver.Edge(options=ip_chrome_options)
+                                    
+                                    # 设置超时和隐式等待
+                                    self.driver.set_page_load_timeout(60)
+                                    self.driver.implicitly_wait(20)
+                                    
+                                    logger.info(f"{self.browser_type}浏览器初始化成功")
+                                    success = True
+                                    break
+                                except Exception as browser_e:
+                                    logger.error(f"初始化{self.browser_type}浏览器失败 ({attempt + 1}/{self.retry_attempts}): {str(browser_e)}")
+                                    if attempt < self.retry_attempts - 1:
+                                        time.sleep(3)
                             
-                            # 重新初始化浏览器，使用新的选项
-                            self.driver = webdriver.Chrome(options=ip_chrome_options)
-                            
-                            # 设置超时和隐式等待
-                            self.driver.set_page_load_timeout(60)
-                            self.driver.implicitly_wait(20)
+                            if not success:
+                                logger.error("所有浏览器初始化尝试都失败了")
+                                continue
                             
                             # 使用原始域名访问（但会被映射到IP地址）
+                            logger.info(f"使用IP映射尝试访问: https://{domain}")
                             self.driver.get(f'https://{domain}')
                             
                             logger.info(f"成功使用IP地址 {ip} 访问 {domain}")
@@ -412,9 +439,13 @@ class HuaweiFusionSolarScraper:
                         try:
                             logger.info(f"尝试使用代理服务器 {proxy}")
                             
-                            # 关闭当前浏览器实例
-                            self.driver.quit()
-                            self.driver = None
+                            # 关闭当前浏览器实例（如果存在）
+                            if self.driver:
+                                try:
+                                    self.driver.quit()
+                                except:
+                                    pass
+                                self.driver = None
                             
                             # 创建新的Chrome选项，配置代理
                             proxy_chrome_options = webdriver.ChromeOptions()
@@ -428,12 +459,34 @@ class HuaweiFusionSolarScraper:
                             proxy_chrome_options.add_argument('--ignore-certificate-errors')
                             proxy_chrome_options.add_argument('--ignore-ssl-errors')
                             
-                            # 重新初始化浏览器，使用代理服务器
-                            self.driver = webdriver.Chrome(options=proxy_chrome_options)
+                            # 使用与__enter__方法相同的浏览器初始化逻辑
+                            success = False
+                            for attempt in range(self.retry_attempts):
+                                try:
+                                    logger.info(f"第 {attempt + 1}/{self.retry_attempts} 次尝试使用代理初始化浏览器...")
+                                    
+                                    if self.browser_type == 'chrome':
+                                        logger.info("初始化Chrome浏览器...")
+                                        self.driver = webdriver.Chrome(options=proxy_chrome_options)
+                                    else:  # edge
+                                        logger.info("初始化Edge浏览器...")
+                                        self.driver = webdriver.Edge(options=proxy_chrome_options)
+                                    
+                                    # 设置超时和隐式等待
+                                    self.driver.set_page_load_timeout(60)
+                                    self.driver.implicitly_wait(20)
+                                    
+                                    logger.info(f"使用代理的{self.browser_type}浏览器初始化成功")
+                                    success = True
+                                    break
+                                except Exception as browser_e:
+                                    logger.error(f"使用代理初始化{self.browser_type}浏览器失败 ({attempt + 1}/{self.retry_attempts}): {str(browser_e)}")
+                                    if attempt < self.retry_attempts - 1:
+                                        time.sleep(3)
                             
-                            # 设置超时和隐式等待
-                            self.driver.set_page_load_timeout(60)
-                            self.driver.implicitly_wait(20)
+                            if not success:
+                                logger.error("所有使用代理的浏览器初始化尝试都失败了")
+                                continue
                             
                             # 尝试使用代理服务器访问
                             proxy_login_url = 'https://intl.fusionsolar.huawei.com'
