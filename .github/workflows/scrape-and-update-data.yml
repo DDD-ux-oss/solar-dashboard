@@ -27,7 +27,7 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # 步骤3: 修改DNS配置（解决域名解析问题）
+      # 步骤3: 修改DNS配置和Hosts文件（解决域名解析问题）
       - name: 修改DNS配置
         run: |
           sudo rm -f /etc/resolv.conf
@@ -39,6 +39,25 @@ jobs:
           sudo bash -c 'echo "nameserver 208.67.222.222" >> /etc/resolv.conf'
           sudo bash -c 'echo "nameserver 208.67.220.220" >> /etc/resolv.conf'
           cat /etc/resolv.conf
+          
+          # 修改hosts文件，手动设置华为FusionSolar网站的域名解析
+          # 使用已知的华为云服务器IP地址
+          sudo tee -a /etc/hosts << EOF
+185.176.7.22    intl.fusionsolar.huawei.com
+185.176.7.23    intl.fusionsolar.huawei.com
+49.4.85.86      intl.fusionsolar.huawei.com
+49.4.85.87      intl.fusionsolar.huawei.com
+185.176.7.22    fusionsolar.huawei.com
+185.176.7.23    fusionsolar.huawei.com
+49.4.85.86      fusionsolar.huawei.com
+49.4.85.87      fusionsolar.huawei.com
+185.176.7.22    uni01cn.fusionsolar.huawei.com
+185.176.7.23    uni01cn.fusionsolar.huawei.com
+49.4.85.86      uni01cn.fusionsolar.huawei.com
+49.4.85.87      uni01cn.fusionsolar.huawei.com
+EOF
+          # 验证hosts文件
+          cat /etc/hosts
 
       # 步骤4: 安装系统依赖（Chrome浏览器和驱动）
       - name: 安装系统依赖
