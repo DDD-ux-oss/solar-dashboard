@@ -63,13 +63,70 @@ jobs:
           # 移除ping测试，因为GitHub Actions环境可能限制ICMP流量
           echo "跳过ping测试（GitHub Actions可能限制ICMP流量）"
           curl -v https://intl.fusionsolar.huawei.com 2>&1 | head -50 || echo "curl测试失败，但继续执行工作流"
+          
+      # 步骤7: 测试Chrome浏览器的DNS解析
+      - name: 测试Chrome浏览器的DNS解析
+        run: |
+          echo "=== 测试Chrome浏览器的DNS解析 ==="
+          # 创建一个Python脚本测试Chrome的DNS解析
+          cat > test_chrome_dns.py << 'EOF'
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+          import logging
+          
+          # 配置日志
+          logging.basicConfig(level=logging.INFO)
+          logger = logging.getLogger(__name__)
+          
+          # 配置Chrome选项
+          chrome_options = Options()
+          chrome_options.add_argument('--headless')
+          chrome_options.add_argument('--no-sandbox')
+          chrome_options.add_argument('--disable-dev-shm-usage')
+          chrome_options.add_argument('--dns-servers=8.8.8.8,8.8.4.4')
+          
+          try:
+              # 启动Chrome浏览器
+              logger.info("启动Chrome浏览器...")
+              driver = webdriver.Chrome(options=chrome_options)
+              
+              # 使用Chrome DevTools Protocol测试DNS解析
+              logger.info("测试Chrome浏览器的DNS解析...")
+              domains_to_test = ['intl.fusionsolar.huawei.com', 'huawei.com', 'github.com']
+              
+              for domain in domains_to_test:
+                  try:
+                      # 尝试使用CDP的Network.enable和Network.getDNSResolveCache方法
+                      # 注意：这个API可能在不同Chrome版本中有变化
+                      driver.execute_cdp_cmd('Network.enable', {})
+                      
+                      # 尝试访问域名
+                      logger.info(f"尝试访问: {domain}")
+                      driver.get(f'https://{domain}')
+                      
+                      # 获取当前URL来检查是否成功
+                      current_url = driver.current_url
+                      logger.info(f"成功访问 {domain}，当前URL: {current_url}")
+                      
+                  except Exception as e:
+                      logger.error(f"Chrome DNS解析 {domain} 失败: {str(e)}")
+              
+              driver.quit()
+              logger.info("Chrome DNS测试完成")
+              
+          except Exception as e:
+              logger.error(f"Chrome浏览器DNS测试失败: {str(e)}")
+          EOF
+          
+          # 运行测试脚本
+          python3 test_chrome_dns.py || echo "Chrome DNS测试脚本运行失败，但继续执行工作流"
 
-      # 步骤7: 跳过检查CI环境预装包（脚本已删除）
+      # 步骤8: 跳过检查CI环境预装包（脚本已删除）
       - name: 跳过检查CI环境预装包
         run: |
           echo "=== 跳过CI环境预装包检查（脚本已删除）==="
 
-      # 步骤8: 安装Python依赖
+      # 步骤9: 安装Python依赖
       - name: 安装Python依赖
         run: |
           python -m pip install --upgrade pip
@@ -80,7 +137,7 @@ jobs:
           python3 -c "import selenium; print('Python3 selenium安装成功')" || echo "Python3 selenium导入失败"
           python3 -c "import easyocr; print('Python3 easyocr安装成功')" || echo "Python3 easyocr导入失败"
 
-      # 步骤9: 运行太阳能数据爬虫
+      # 步骤10: 运行太阳能数据爬虫
       - name: 运行太阳能数据爬虫
         env:
           HUAWEI_USERNAME: ${{ secrets.HUAWEI_USERNAME }}
@@ -105,7 +162,7 @@ jobs:
             exit 1
           }
 
-      # 步骤10: 检查数据更新
+      # 步骤11: 检查数据更新
       - name: 检查数据更新
         run: |
           if [ -s solar_data.json ]; then
@@ -116,7 +173,7 @@ jobs:
             exit 1
           fi
 
-      # 步骤11: 提交更新的数据文件到仓库
+      # 步骤12: 提交更新的数据文件到仓库
       - name: 提交数据更新
         run: |
           git config --global user.name 'github-actions[bot]'
