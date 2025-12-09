@@ -446,8 +446,6 @@ class HuaweiFusionSolarScraper:
                             logger.error(f"使用代理服务器 {proxy} 失败: {str(proxy_e)}")
                             # 等待3秒后重试下一个代理
                             time.sleep(3)
-                    except Exception as proxy_e:
-                        logger.error(f"使用代理服务器访问失败: {str(proxy_e)}")
                 
                 if not login_url:
                     logger.error("所有登录尝试都失败")
