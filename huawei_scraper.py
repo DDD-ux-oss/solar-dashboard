@@ -348,22 +348,21 @@ class HuaweiFusionSolarScraper:
                 if not login_url:
                     logger.info("=== 第二级：域名访问失败，尝试直接使用IP地址访问 ===")
                     
-                    # 华为FusionSolar服务器的已知IP地址列表
-                    known_ips = [
-                        '185.176.7.22',  # 华为云服务器IP地址
-                        '185.176.7.23',  # 华为云服务器IP地址
-                        '49.4.85.86',    # 华为云服务器IP地址
-                        '49.4.85.87',    # 华为云服务器IP地址
-                        '101.89.120.107',  # 华为云服务器IP地址
-                        '101.89.120.108'   # 华为云服务器IP地址
+                    # 华为FusionSolar服务器的已知IP地址列表（映射关系：IP -> 域名）
+                    ip_domain_mappings = [
+                        {'ip': '185.176.7.22', 'domain': 'intl.fusionsolar.huawei.com'},  # 华为云服务器IP地址
+                        {'ip': '185.176.7.23', 'domain': 'intl.fusionsolar.huawei.com'},  # 华为云服务器IP地址
+                        {'ip': '49.4.85.86', 'domain': 'intl.fusionsolar.huawei.com'},    # 华为云服务器IP地址
+                        {'ip': '49.4.85.87', 'domain': 'intl.fusionsolar.huawei.com'},    # 华为云服务器IP地址
+                        {'ip': '101.89.120.107', 'domain': 'intl.fusionsolar.huawei.com'},  # 华为云服务器IP地址
+                        {'ip': '101.89.120.108', 'domain': 'intl.fusionsolar.huawei.com'}   # 华为云服务器IP地址
                     ]
                     
-                    # 目标域名
-                    target_domain = 'intl.fusionsolar.huawei.com'
-                    
-                    for ip in known_ips:
+                    for mapping in ip_domain_mappings:
                         try:
-                            logger.info(f"尝试使用IP地址 {ip} 访问 {target_domain}")
+                            ip = mapping['ip']
+                            domain = mapping['domain']
+                            logger.info(f"尝试使用IP地址 {ip} 访问 {domain}")
                             
                             # 创建一个新的Chrome选项，用于IP地址访问
                             ip_chrome_options = webdriver.ChromeOptions()
@@ -372,8 +371,8 @@ class HuaweiFusionSolarScraper:
                             for arg in self.chrome_options.arguments:
                                 ip_chrome_options.add_argument(arg)
                             
-                            # 添加Host头配置
-                            ip_chrome_options.add_argument(f'--host-resolver-rules="MAP {target_domain} {ip}"')
+                            # 添加Host头映射规则（注意：不要使用引号）
+                            ip_chrome_options.add_argument(f'--host-resolver-rules=MAP {domain} {ip}')
                             
                             # 关闭当前浏览器实例
                             self.driver.quit()
@@ -387,13 +386,13 @@ class HuaweiFusionSolarScraper:
                             self.driver.implicitly_wait(20)
                             
                             # 使用原始域名访问（但会被映射到IP地址）
-                            self.driver.get(f'https://{target_domain}')
+                            self.driver.get(f'https://{domain}')
                             
-                            logger.info(f"成功使用IP地址 {ip} 访问 {target_domain}")
-                            login_url = f'https://{target_domain}'
+                            logger.info(f"成功使用IP地址 {ip} 访问 {domain}")
+                            login_url = f'https://{domain}'
                             break
                         except Exception as ip_e:
-                            logger.error(f"使用IP地址 {ip} 访问失败: {str(ip_e)}")
+                            logger.error(f"使用IP地址 {mapping['ip']} 访问失败: {str(ip_e)}")
                             # 等待3秒后重试下一个IP
                             time.sleep(3)
                     
