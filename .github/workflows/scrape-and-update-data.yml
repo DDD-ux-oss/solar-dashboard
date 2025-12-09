@@ -60,8 +60,9 @@ jobs:
       # 步骤6: 测试网络连接
       - name: 测试网络连接
         run: |
-          ping -c 3 8.8.8.8
-          curl -v https://intl.fusionsolar.huawei.com 2>&1 | head -50
+          # 移除ping测试，因为GitHub Actions环境可能限制ICMP流量
+          echo "跳过ping测试（GitHub Actions可能限制ICMP流量）"
+          curl -v https://intl.fusionsolar.huawei.com 2>&1 | head -50 || echo "curl测试失败，但继续执行工作流"
 
       # 步骤7: 检查CI环境预装包
       - name: 检查CI环境预装包
