@@ -12,10 +12,23 @@ install_dependencies:
   image: ubuntu:latest
   script:
     - echo "=== 安装系统依赖 ==="
-    - apt-get update && apt-get install -y python3 python3-pip
+    - apt-get update && apt-get install -y python3 python3-pip wget curl unzip libxss1 libxtst6 libxrandr2 libasound2t64 libpangocairo-1.0-0 libatk1.0-0 libcairo-gobject2 libgtk-3-0 libgdk-pixbuf2.0-0 git
+    - echo "=== 安装Chrome浏览器和驱动 ==="
+    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
+    - apt-get update
+    - apt-get install -y google-chrome-stable
+    - apt-get install -y chromium-chromedriver
+    - echo "=== 修改DNS配置 ==="
+    - rm -f /etc/resolv.conf
+    - echo "nameserver 8.8.8.8" > /etc/resolv.conf
+    - echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+    - echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+    - cat /etc/resolv.conf
     - echo "=== 安装Python依赖 ==="
     - pip3 install --upgrade pip
     - pip3 install -r requirements.txt
+    - pip3 install webdriver-manager
 
 run_scraper:
   stage: scrape
@@ -23,11 +36,15 @@ run_scraper:
     - docker
   image: ubuntu:latest
   script:
+    - echo "=== 测试DNS解析 ==="
+    - nslookup intl.fusionsolar.huawei.com || echo "跳过nslookup测试"
     - echo "=== 执行太阳能数据爬虫脚本 ==="
     - python3 main.py
   artifacts:
     paths:
       - data/
+      - solar_data.json
+      - screenshots/
 
 update_repository:
   stage: update
@@ -36,12 +53,14 @@ update_repository:
   image: ubuntu:latest
   script:
     - echo "=== 配置Git环境 ==="
-    - apt-get update && apt-get install -y git
     - git config --global user.name "Gitee CI"
     - git config --global user.email "ci@example.com"
+    - echo "=== 检查Git仓库状态 ==="
+    - git status
     - echo "=== 提交更新 ==="
-    - git add data/*.json
-    - git commit -m "自动更新太阳能数据 $(date +%Y-%m-%d)"
+    - git add data/*.json solar_data.json screenshots/
+    - git status
+    - if ! git diff --staged --quiet; then git commit -m "自动更新太阳能数据 $(date +%Y-%m-%d)" && echo "提交成功"; else echo "没有检测到数据更改，跳过提交"; fi
   only:
     - main
   dependencies:
